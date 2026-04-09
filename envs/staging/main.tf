@@ -216,3 +216,38 @@ module "loadbalancer" {
   subnet_id                 = ""               # Empty means Public LB
   #subnet_id               = module.virtual_network.subnets["spoke"]["web"]  # For Private LB # Works if subnet output exists with spoke\web key; adjust if subnet naming is different.
 }
+
+module "appgw" {
+  source = "../../modules/az-applicationgateway"
+
+  prefix              = local.prefix
+
+  resource_group_name = module.rg.resource_group_name
+  location            = module.rg.resource_group_location
+  tags                = module.rg.tags
+
+  # appgw Public IP
+  allocation_method = "Static"
+  sku               = "Standard"
+
+  # SKU configuration for Application Gateway
+  sku_name     = "${local.prefix}-appgw-Standard_v2"          # The SKU name (Standard_v2, WAF_v2, etc.)
+  sku_tier     = "Standard_v2"                                # The SKU tier (Standard_v2, WAF_v2)
+  sku_capacity = 1                                            # Capacity: Number of instances for the gateway 
+
+  # Gateway IP Configuration
+  subnet_id           = module.virtual_network.subnets["hub"] ["AppGatewaySubnet"]          # Subnet ID where the Application Gateway will be deployed 
+
+  # Frontend IP Configuration
+  enable_public_ip    = true                                          # set to false to create internal-only App Gateway without public IP
+  private_ip_allocation = "Static"                                    # Private IP allocation type for Application Gateway frontend (Dynamic or Static)
+
+  # Frontend Port
+  application_gateway_hostname     = "uat.biztalk.com" # The hostname that the redirect listener will catch; this should match the host header of incoming requests that you want to redirect from IP to FQDN.
+  port = 80                                                           # Port number for incoming traffic (e.g., 80 for HTTP, 443 for HTTPS)
+
+  # Required variables for routing modules
+  appgw_hostname      = "uat.biztalk.com"
+  frontend_ip_name    = "${local.prefix}-appgw-frontend-ip"
+  frontend_port_name  = "${local.prefix}-appgw-frontend-port"
+}
