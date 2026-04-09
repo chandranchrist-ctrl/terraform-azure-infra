@@ -1,82 +1,62 @@
-# # Optional: Fetch SSL certificate from Azure Key Vault
-# data "azurerm_key_vault" "kv" {
-#   name                = "my-keyvault"
-#   resource_group_name = "my-keyvault-rg"
-# }
-
-# data "azurerm_key_vault_certificate" "biztalk_ssl" {
-#   name         = "biztalk-uat-ssl-cert"
-#   key_vault_id = data.azurerm_key_vault.kv.id
-# }
-
 ############################################################
 # Local configuration for SSL Termination Routing
 ############################################################
 locals {
+  ssl_app_name = "uat-biztalk"
+
   ssl_routing = {
-    enabled = true
+    enabled = true    # Enable SSL routing for this App Gateway configuration
 
     # Backend pool(s)
     backend_pools = [
       {
-        name         = "uat-biztalk-ssl-be"
-        ip_addresses = ["10.0.2.30"]
+        name         = "${local.ssl_app_name}-ssl-be"
+        ip_addresses = ["10.0.2.30"]      # IP address of the BizTalk server in UAT
       }
     ]
 
     # Listeners
     listeners = [
       {
-        name                         = "uat-biztalk-ssl-listener"
-        frontend_ip_configuration_name = var.frontend_ip_name
-        frontend_port_name             = var.frontend_port_name
-        protocol                       = "Https"
-        host_name                      = var.appgw_hostname
+        name                         = "${local.ssl_app_name}-ssl-listener"  
+        frontend_ip_configuration_name = var.frontend_ip_name       # Name of the frontend IP configuration to use
+        frontend_port_name             = var.frontend_port_name    # Name of the frontend port to use (e.g., "https-port")
+        protocol                       = "Https"                  # Use HTTPS protocol for SSL routing
+        host_name                      = var.appgw_hostname   ## Optional: Specify the hostname for SNI-based routing (e.g., "biztalk-uat.contoso.com")
       }
     ]
-
-    # # SSL Configuration - Metadata
-    # ssl_config = {
-    #   ssl_cert_name     = data.azurerm_key_vault_certificate.biztalk_ssl.name
-    #   key_vault_name    = data.azurerm_key_vault.kv.name
-    #   key_vault_rg      = data.azurerm_key_vault.kv.resource_group_name
-
-    # # THIS is the important part
-    #   secret_id      = data.azurerm_key_vault_certificate.biztalk_ssl.secret_id
-
-    # }
 
     # HTTP settings
     http_settings = [
       {
-        name                  = "uat-biztalk-ssl-httphst"
-        port                  = 443
-        protocol              = "Https"
-        cookie_based_affinity = "Disabled"
-        request_timeout       = 60
-        probe_name            = "uat-biztalk-ssl-probe"
+        name                  = "${local.ssl_app_name}-ssl-httphst"   # Name of the HTTP settings configuration
+        port                  = 443                   # Port on which the backend pool is listening (HTTPS)
+        protocol              = "Https"         # Use HTTPS protocol for backend communication
+        cookie_based_affinity = "Disabled"        # Optional: Configure cookie-based affinity if needed (e.g., "Enabled" or "Disabled")
+        request_timeout       = 60                # Optional: Set request timeout in seconds (default is 20 seconds)
+        probe_name            = "${local.ssl_app_name}-ssl-probe"            
       }
     ]
 
     # Health probes
     probes = [
       {
-        name     = "uat-biztalk-ssl-probe"
-        protocol = "Https"
-        path     = "/health"
+        name     = "${local.ssl_app_name}-ssl-probe"     # Name of the health probe configuration
+        protocol = "Https"                # Use HTTPS protocol for health checks
+        path     = "/health"          # Path to check for health status (e.g., "/health" or "/status")
       }
     ]
 
     # Routing rules
     routing_rules = [
       {
-        name                     = "uat-biztalk-ssl-rule"
-        listener_name            = "uat-biztalk-ssl-listener"
-        backend_pool_name        = "uat-biztalk-ssl-be"
-        backend_http_settings_name = "uat-biztalk-ssl-httphst"
-        rule_type                = "Basic"
-        priority                 = 50
-        ssl_certificate_name     = "biztalk-uat-ssl-cert"
+        name                     = "${local.ssl_app_name}-ssl-rule"   # Name of the routing rule configuration
+        listener_name            = "${local.ssl_app_name}-ssl-listener"             # Name of the listener to associate with this routing rule
+        backend_pool_name        = "${local.ssl_app_name}-ssl-be"                    # Name of the backend pool to route traffic to
+        backend_http_settings_name = "${local.ssl_app_name}-ssl-httphst"  # Name of the HTTP settings to use for this routing rule
+        rule_type                = "Basic"                    # Type of routing rule (e.g., "Basic" for simple routing or "PathBasedRouting" for path-based routing)
+        priority                 = 50                         # Optional: Set priority for the routing rule (lower number means higher priority)
+        ssl_certificate_name     = "biztalk-uat-ssl-cert"       # Name of the SSL certificate to use for this routing rule (must match the name of the certificate defined in the App Gateway configuration)
       }
     ]
 
@@ -91,8 +71,8 @@ locals {
 ############################################################
 
 output "ssl_routing" {
-  description = "Full SSL routing configuration for App Gateway"
-  value       = local.ssl_routing
+  description = "Full SSL routing configuration for App Gateway"      
+  value       = local.ssl_routing           # Output the entire SSL routing configuration as a single object for use in the App Gateway module
 }
 
 # output "ssl_config" {
