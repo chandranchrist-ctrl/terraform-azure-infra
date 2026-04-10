@@ -251,3 +251,53 @@ module "appgw" {
   frontend_ip_name    = "${local.prefix}-appgw-frontend-ip"
   frontend_port_name  = "${local.prefix}-appgw-frontend-port"
 }
+
+module "windows_vm" {
+  source = "../../modules/az-compute/vm"
+
+  resource_group_name = module.rg.resource_group_name
+  location            = module.rg.resource_group_location
+  tags                = module.rg.tags
+
+  vm_name_prefix = "biztalk-${local.prefix}-app"
+  vm_count       = 2
+
+  vm_size  = "Standard_B2s"
+  image_sku = "2019-Datacenter"
+
+    # 🔐 KEY VAULT INPUTS (NEW)
+  key_vault_name = "your-kv-name"
+  key_vault_rg   = "your-kv-rg-name"
+
+  admin_username_secret_name = "admin-username-secret"
+  admin_password_secret_name = "admin-password-secret"
+
+  subnet_id = module.virtual_network.subnets["spoke"]["web"]
+
+  private_ip_allocation = "static"
+
+  os_disk_storage_type = "Standard_LRS"
+  # data_disk_storage_type = each.value.disk.storage_type
+
+  
+  availability_set_name = "biztalk-avset"
+
+  license_type = "Windows_Server" # Sample: "Windows_Server", "RHEL", "SLES", "Windows_Client"; adjust based on your image and licensing needs
+
+  enable_availability_set = false
+  zones = []  # Sample: ["1", "2", "3"] 
+
+
+  enable_public_ip = false
+
+  enable_boot_diagnostics = true
+
+  data_disks = [
+    {
+      size_gb = 128
+      lun     = 0
+      caching = "ReadWrite"
+      storage_type = "Standard_LRS"
+    }
+  ]
+}
