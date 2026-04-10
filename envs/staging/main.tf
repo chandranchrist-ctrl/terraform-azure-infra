@@ -253,7 +253,7 @@ module "appgw" {
 }
 
 module "windows_vm" {
-  source = "../../modules/az-compute/vm"
+  source = "../../modules/az-compute/windows_vm"
 
   resource_group_name = module.rg.resource_group_name
   location            = module.rg.resource_group_location

@@ -118,7 +118,7 @@ locals {
 resource "azurerm_managed_disk" "data_disk" {
   for_each = local.data_disks
 
-  name                 = "${each.value.vm}-datadisk-${each.value.disk.lun}"
+  name                 = "${each.value.vm}-datadisk${each.value.disk.lun}"
   location             = var.location
   resource_group_name  = var.resource_group_name
 
