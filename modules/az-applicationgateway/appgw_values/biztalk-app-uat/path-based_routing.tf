@@ -47,82 +47,82 @@ locals {
 
   path_based_routing = {
 
-    enabled = false
-    skip_in_tf  = false  # Set true if you want to keep module in TF state but ignore it
+    enabled    = false
+    skip_in_tf = false # Set true if you want to keep module in TF state but ignore it
 
     backend_pools = [
       {
-        name        = "${local.path_app_name}-path-backend"
-        ip_addresses = ["10.0.2.10", "10.0.2.11"]               # List of backend pool members (IP addresses of the application servers). This is where the Application Gateway will route traffic to.
+        name         = "${local.path_app_name}-path-backend"
+        ip_addresses = ["10.0.2.10", "10.0.2.11"] # List of backend pool members (IP addresses of the application servers). This is where the Application Gateway will route traffic to.
       }
     ]
 
     listeners = [
       {
         name                           = "${local.path_app_name}-path-listener" # Name of the listener to associate with this routing rule. This must match the name of a defined listener in the Application Gateway.
-        frontend_ip_configuration_name = "${local.path_app_name}-path-feip"  # Name of the frontend IP configuration to associate with this listener. This must match the name of a defined frontend IP configuration in the Application Gateway.
-        frontend_port_name             = "${local.path_app_name}-path-feport" # Name of the frontend port to associate with this listener. This must match the name of a defined frontend port in the Application Gateway.
-        protocol                       = "Http"      # Protocol for the listener (Http or Https). Determines how the Application Gateway listens for incoming traffic.
-        host_name                      = "uat.biztalk.com"  # Host name for the listener. This is used for routing decisions based on the host header in incoming requests.
+        frontend_ip_configuration_name = "${local.path_app_name}-path-feip"     # Name of the frontend IP configuration to associate with this listener. This must match the name of a defined frontend IP configuration in the Application Gateway.
+        frontend_port_name             = "${local.path_app_name}-path-feport"   # Name of the frontend port to associate with this listener. This must match the name of a defined frontend port in the Application Gateway.
+        protocol                       = "Http"                                 # Protocol for the listener (Http or Https). Determines how the Application Gateway listens for incoming traffic.
+        host_name                      = "uat.biztalk.com"                      # Host name for the listener. This is used for routing decisions based on the host header in incoming requests.
       }
     ]
 
     routing_rules = [
       {
-        name                       = "${local.path_app_name}-path-rule"   # Name of the routing rule. This is used to identify the rule within the Application Gateway configuration.
-        listener_name              = "${local.path_app_name}-path-listener"   # Name of the listener to associate with this routing rule. This must match the name of a defined listener in the Application Gateway.
-        backend_pool_name          = "${local.path_app_name}-path-be"   # Name of the backend pool to route traffic to when this rule is matched. This must match the name of a defined backend pool in the Application Gateway.
-        backend_http_settings_name = "${local.path_app_name}-path-httphst"    # Name of the backend HTTP settings to use for this routing rule. This must match the name of a defined backend HTTP setting in the Application Gateway.
-        rule_type                  = "PathBasedRouting" # Type of routing rule. "PathBasedRouting" means that the rule will route traffic based on the URL path in incoming requests. Other types include "Basic" and "MultiSite".
-        priority                   = 15           # Priority of the routing rule. This determines the order in which rules are evaluated when processing incoming requests. Lower numbers have higher priority. 
-        url_path_map_name = "${local.path_app_name}-urlpathmap" # Name of the URL path map to use for this routing rule. This must match the name of a defined URL path map in the Application Gateway. The URL path map specifies the mapping between URL paths and backend pools.
+        name                       = "${local.path_app_name}-path-rule"     # Name of the routing rule. This is used to identify the rule within the Application Gateway configuration.
+        listener_name              = "${local.path_app_name}-path-listener" # Name of the listener to associate with this routing rule. This must match the name of a defined listener in the Application Gateway.
+        backend_pool_name          = "${local.path_app_name}-path-be"       # Name of the backend pool to route traffic to when this rule is matched. This must match the name of a defined backend pool in the Application Gateway.
+        backend_http_settings_name = "${local.path_app_name}-path-httphst"  # Name of the backend HTTP settings to use for this routing rule. This must match the name of a defined backend HTTP setting in the Application Gateway.
+        rule_type                  = "PathBasedRouting"                     # Type of routing rule. "PathBasedRouting" means that the rule will route traffic based on the URL path in incoming requests. Other types include "Basic" and "MultiSite".
+        priority                   = 15                                     # Priority of the routing rule. This determines the order in which rules are evaluated when processing incoming requests. Lower numbers have higher priority. 
+        url_path_map_name          = "${local.path_app_name}-urlpathmap"    # Name of the URL path map to use for this routing rule. This must match the name of a defined URL path map in the Application Gateway. The URL path map specifies the mapping between URL paths and backend pools.
       }
     ]
 
     http_settings = [
       {
-        name       = "${local.path_app_name}-path-httphst"
-        port       = 80             # Port on which the backend pool members are listening. The Application Gateway will forward traffic to this port on the backend servers.
-        protocol   = "Http"         # Protocol for communication between the Application Gateway and the backend pool members. This can be Http or Https depending on how your backend servers are configured.
-        cookie_based_affinity = "Disabled"                # Determines whether to enable cookie-based session affinity. When enabled, the Application Gateway will route requests from the same client to the same backend pool member based on cookies.
-        request_timeout       = 60        # Time (in seconds) that the Application Gateway will wait for a response from the backend pool member before timing out. Adjust this based on the expected response times of your application.
-        probe_name = "${local.path_app_name}-path-probe" # Name of the health probe to associate with this backend HTTP setting. This is used to determine the health of backend pool members and route traffic only to healthy instances. Set to null if you don't want to associate a probe.
+        name                  = "${local.path_app_name}-path-httphst"
+        port                  = 80                                  # Port on which the backend pool members are listening. The Application Gateway will forward traffic to this port on the backend servers.
+        protocol              = "Http"                              # Protocol for communication between the Application Gateway and the backend pool members. This can be Http or Https depending on how your backend servers are configured.
+        cookie_based_affinity = "Disabled"                          # Determines whether to enable cookie-based session affinity. When enabled, the Application Gateway will route requests from the same client to the same backend pool member based on cookies.
+        request_timeout       = 60                                  # Time (in seconds) that the Application Gateway will wait for a response from the backend pool member before timing out. Adjust this based on the expected response times of your application.
+        probe_name            = "${local.path_app_name}-path-probe" # Name of the health probe to associate with this backend HTTP setting. This is used to determine the health of backend pool members and route traffic only to healthy instances. Set to null if you don't want to associate a probe.
       }
     ]
 
     url_path_maps = [
       {
-        name                        = "${local.path_app_name}-urlpathmap"
-        backend_address_pool_name   = "${local.path_app_name}-default-be"  # optional fallback
-        backend_http_settings_name  = "${local.path_app_name}-default-httphst"
+        name                       = "${local.path_app_name}-urlpathmap"
+        backend_address_pool_name  = "${local.path_app_name}-default-be" # optional fallback
+        backend_http_settings_name = "${local.path_app_name}-default-httphst"
 
         path_rules = [
           {
-            name                        = "api-rule"
-            paths                       = ["/api/*"]
-            backend_address_pool_name   = "${local.path_app_name}-path-be"
-            backend_http_settings_name  = "${local.path_app_name}-path-httphst"
+            name                       = "api-rule"
+            paths                      = ["/api/*"]
+            backend_address_pool_name  = "${local.path_app_name}-path-be"
+            backend_http_settings_name = "${local.path_app_name}-path-httphst"
           },
           {
-            name                      = "web-rule"
-            paths                     = ["/web/*"]
-            backend_address_pool_name = "${local.path_app_name}-path-be"
+            name                       = "web-rule"
+            paths                      = ["/web/*"]
+            backend_address_pool_name  = "${local.path_app_name}-path-be"
             backend_http_settings_name = "${local.path_app_name}-path-httphst"
           }
         ]
       }
-    ]    
+    ]
 
     probes = [
       {
         name     = "${local.path_app_name}-path-probe"
-        protocol = "Http"               # Protocol for the health probe (Http or Https). This determines how the Application Gateway checks the health of backend pool members.
-        path     = "/health"            # URL path to use for the health probe. The Application Gateway will send requests to this path on the backend pool members to check their health status. Adjust this based on your application's health check endpoint.
+        protocol = "Http"    # Protocol for the health probe (Http or Https). This determines how the Application Gateway checks the health of backend pool members.
+        path     = "/health" # URL path to use for the health probe. The Application Gateway will send requests to this path on the backend pool members to check their health status. Adjust this based on your application's health check endpoint.
       }
     ]
   }
 }
 
 output "path_based_routing" {
-  value = local.path_based_routing      # Output the path-based routing configuration for use in other parts of the Terraform configuration. This allows you to reference this configuration when defining the Application Gateway resource and apply it conditionally based on the "enabled" flag.
+  value = local.path_based_routing # Output the path-based routing configuration for use in other parts of the Terraform configuration. This allows you to reference this configuration when defining the Application Gateway resource and apply it conditionally based on the "enabled" flag.
 }

@@ -9,7 +9,13 @@ data "azurerm_key_vault_secret" "admin_username" {
 }
 
 data "azurerm_key_vault_secret" "admin_password" {
+  count        = local.use_password ? 1 : 0
   name         = var.admin_password_secret_name
+  key_vault_id = data.azurerm_key_vault.kv.id
+}
+
+data "azurerm_key_vault_secret" "ssh_public_key" {
+  name         = var.ssh_public_key_secret_name
   key_vault_id = data.azurerm_key_vault.kv.id
 }
 

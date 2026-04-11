@@ -1,4 +1,5 @@
 variable "location" {}
+
 variable "resource_group_name" {}
 
 variable "vm_name" {
@@ -12,10 +13,6 @@ variable "vm_count" {
 
 variable "vm_size" {}
 
-# variable "admin_username" {}
-# variable "admin_password" {
-#   sensitive = true
-# }
 
 variable "subnet_id" {}
 
@@ -34,11 +31,6 @@ variable "tags" {
 variable "os_disk_storage_type" {}
 
 variable "image_sku" {}
-
-variable "license_type" {
-  type    = string
-  default = null
-}
 
 variable "zones" {
   type    = list(string)
@@ -75,6 +67,10 @@ variable "admin_password_secret_name" {
   type = string
 }
 
+variable "ssh_public_key_secret_name" {
+  type = string
+}
+
 variable "availability_set_name" {
   type = string
 }
@@ -87,6 +83,15 @@ variable "enable_availability_set" {
 variable "enable_boot_diagnostics" {
   type    = bool
   default = false
+}
+
+variable "auth_mode" {
+  type = string
+
+  validation {
+    condition     = contains(["ssh", "password"], var.auth_mode)
+    error_message = "auth_mode must be 'ssh' or 'password'"
+  }
 }
 
 variable "boot_diagnostics_storage_account_name" {
@@ -105,5 +110,6 @@ variable "boot_diagnostics_mode" {
 }
 
 variable "key_vault_id" {
-  type = string
+  type        = string
+  description = "The resource ID of the Key Vault containing the SSL certificate for Application Gateway SSL termination"
 }

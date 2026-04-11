@@ -23,4 +23,6 @@ resource "azurerm_subnet" "subnet" {
   resource_group_name  = var.resource_group_name
   virtual_network_name = azurerm_virtual_network.vnet[each.value.vnet_key].name
   address_prefixes     = each.value.cidr
+
+  service_endpoints = ["Microsoft.KeyVault"]
 }

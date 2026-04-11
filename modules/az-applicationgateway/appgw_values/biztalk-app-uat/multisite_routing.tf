@@ -46,21 +46,21 @@ locals {
   multisite_app_name = "uat-biztalk"
 
   multisite_routing = {
-    enabled = false
-    skip_in_tf  = false  # Set true if you want to keep module in TF state but ignore it
+    enabled    = false
+    skip_in_tf = false # Set true if you want to keep module in TF state but ignore it
 
     backend_pools = [
-      { name = "${local.multisite_app_name}-site1-be", ip_addresses = ["10.0.2.20"] },      # List of backend pool members (IP addresses of the application servers). This is where the Application Gateway will route traffic to.
+      { name = "${local.multisite_app_name}-site1-be", ip_addresses = ["10.0.2.20"] }, # List of backend pool members (IP addresses of the application servers). This is where the Application Gateway will route traffic to.
       { name = "${local.multisite_app_name}-site2-be", ip_addresses = ["10.0.2.21"] }
     ],
 
     listeners = [
       {
-        name                           = "${local.multisite_app_name}-ms1-listener",  # Name of the listener to associate with this routing rule. This must match the name of a defined listener in the Application Gateway.
-        frontend_ip_configuration_name = "${local.multisite_app_name}-ms1-feip",  # Name of the frontend IP configuration to associate with this listener. This must match the name of a defined frontend IP configuration in the Application Gateway.  
-        frontend_port_name             = "${local.multisite_app_name}-ms1-feport",  # Name of the frontend port to associate with this listener. This must match the name of a defined frontend port in the Application Gateway.
-        protocol                       = "Http",    # Protocol for the listener (Http or Https). Determines how the Application Gateway listens for incoming traffic.
-        host_name                      = "site1.uat.biztalk.com"  # Host name for the listener. This is used for routing decisions based on the host header in incoming requests.
+        name                           = "${local.multisite_app_name}-ms1-listener", # Name of the listener to associate with this routing rule. This must match the name of a defined listener in the Application Gateway.
+        frontend_ip_configuration_name = "${local.multisite_app_name}-ms1-feip",     # Name of the frontend IP configuration to associate with this listener. This must match the name of a defined frontend IP configuration in the Application Gateway.  
+        frontend_port_name             = "${local.multisite_app_name}-ms1-feport",   # Name of the frontend port to associate with this listener. This must match the name of a defined frontend port in the Application Gateway.
+        protocol                       = "Http",                                     # Protocol for the listener (Http or Https). Determines how the Application Gateway listens for incoming traffic.
+        host_name                      = "site1.uat.biztalk.com"                     # Host name for the listener. This is used for routing decisions based on the host header in incoming requests.
       },
       {
         name                           = "${local.multisite_app_name}-ms2-listener",
@@ -73,12 +73,12 @@ locals {
 
     routing_rules = [
       {
-        name                       = "${local.multisite_app_name}-ms1-rule",   # Name of the routing rule. This is used to identify the rule within the Application Gateway configuration.
+        name                       = "${local.multisite_app_name}-ms1-rule",     # Name of the routing rule. This is used to identify the rule within the Application Gateway configuration.
         listener_name              = "${local.multisite_app_name}-ms1-listener", # Name of the listener to associate with this routing rule. This must match the name of a defined listener in the Application Gateway.
-        backend_pool_name          = "${local.multisite_app_name}-ms1-be", # Name of the backend pool to route traffic to when this rule is matched. This must match the name of a defined backend pool in the Application Gateway.
-        backend_http_settings_name = "${local.multisite_app_name}-ms1-httphst", # Name of the backend HTTP settings to use for this routing rule. This must match the name of a defined backend HTTP setting in the Application Gateway.
-        rule_type                  = "Basic",   # Type of routing rule. "Basic" means that the rule will route traffic based on the listener and backend pool association without any additional conditions. Other types include "PathBasedRouting" and "MultiSite".
-        priority                   = 20        # Priority of the routing rule. This determines the order in which rules are evaluated when processing incoming requests. Lower numbers have higher priority.  
+        backend_pool_name          = "${local.multisite_app_name}-ms1-be",       # Name of the backend pool to route traffic to when this rule is matched. This must match the name of a defined backend pool in the Application Gateway.
+        backend_http_settings_name = "${local.multisite_app_name}-ms1-httphst",  # Name of the backend HTTP settings to use for this routing rule. This must match the name of a defined backend HTTP setting in the Application Gateway.
+        rule_type                  = "Basic",                                    # Type of routing rule. "Basic" means that the rule will route traffic based on the listener and backend pool association without any additional conditions. Other types include "PathBasedRouting" and "MultiSite".
+        priority                   = 20                                          # Priority of the routing rule. This determines the order in which rules are evaluated when processing incoming requests. Lower numbers have higher priority.  
       },
       {
         name                       = "${local.multisite_app_name}-ms2-rule",
@@ -90,17 +90,17 @@ locals {
       }
     ],
 
-    http_settings = [         # Port on which the backend pool members are listening. The Application Gateway will forward traffic to this port on the backend servers.
+    http_settings = [ # Port on which the backend pool members are listening. The Application Gateway will forward traffic to this port on the backend servers.
       { name = "${local.multisite_app_name}-ms1-httphst", port = 80, protocol = "Http", cookie_based_affinity = "Disabled", request_timeout = 60, probe_name = "${local.multisite_app_name}-ms1-probe" },
       { name = "${local.multisite_app_name}-ms2-httphst", port = 80, protocol = "Http", cookie_based_affinity = "Disabled", request_timeout = 60, probe_name = "${local.multisite_app_name}-ms2-probe" }
     ],
 
-    probes = [                # Health probes are used to monitor the health of backend pool members. You can define custom probes that check specific endpoints on your application servers to ensure they are healthy before routing traffic to them.
+    probes = [ # Health probes are used to monitor the health of backend pool members. You can define custom probes that check specific endpoints on your application servers to ensure they are healthy before routing traffic to them.
       { name = "${local.multisite_app_name}-ms1-probe", protocol = "Http", path = "/health" },
       { name = "${local.multisite_app_name}-ms2-probe", protocol = "Http", path = "/health" }
     ],
 
-    redirects    = [],
+    redirects     = [],
     url_path_maps = []
   }
 }

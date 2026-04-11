@@ -28,7 +28,7 @@ IP-TO-FQDN LISTENER NOTE
 
 locals {
   ip_to_fqdn_config = {
-    enabled = false   # toggle ON/OFF
+    enabled = false # toggle ON/OFF
 
     # Backend is empty because we are just redirecting IP to FQDN
     backend_pools = []
@@ -48,7 +48,7 @@ locals {
     redirects = [
       {
         name = "ip-to-fqdn"
-        type = "Permanent"    # Permanent (301) or Temporary (302) redirect
+        type = "Permanent"               # Permanent (301) or Temporary (302) redirect
         url  = "https://uat.biztalk.com" # The FQDN to which IP requests will be redirected
       }
     ]
@@ -58,9 +58,9 @@ locals {
       {
         name          = "ip-redirect-rule"
         listener_name = "ip-listener" # The listener that catches IP requests
-        rule_type     = "Basic"     # Basic rule that applies the redirect; no backend pool or HTTP settings needed
-        priority      = 5        # Priority of the rule (lower number means higher priority); adjust as needed to ensure it takes precedence over other rules
-        redirect_name = "ip-to-fqdn"      # The redirect configuration to apply when this rule matches
+        rule_type     = "Basic"       # Basic rule that applies the redirect; no backend pool or HTTP settings needed
+        priority      = 5             # Priority of the rule (lower number means higher priority); adjust as needed to ensure it takes precedence over other rules
+        redirect_name = "ip-to-fqdn"  # The redirect configuration to apply when this rule matches
       }
     ]
 
@@ -71,5 +71,5 @@ locals {
 }
 
 output "redirect_ip_to_fqdn_config" {
-  value = local.ip_to_fqdn_config           # Output the configuration for reference or use in other modules if needed
+  value = local.ip_to_fqdn_config # Output the configuration for reference or use in other modules if needed
 }

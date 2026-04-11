@@ -93,33 +93,38 @@ variable "port" {
 # Routing toggles
 
 variable "enable_basic_routing" {
-  type        = bool
-  default     = true
+  type    = bool
+  default = true
 }
 
 variable "enable_path_routing" {
-  type        = bool
-  default     = false
+  type    = bool
+  default = false
 }
 
 variable "enable_multisite_routing" {
-  type        = bool
-  default     = false
+  type    = bool
+  default = false
 }
 
 variable "enable_redirect_routing" {
-  type        = bool
-  default     = false
+  type    = bool
+  default = false
 }
 
 variable "enable_ssl_routing" {
-  type        = bool
-  default     = false
+  type    = bool
+  default = false
 }
 
 variable "application_gateway_hostname" {
   type        = string
   description = "The hostname that this redirect listener will catch; this should match the host header of incoming requests that you want to redirect from IP to FQDN."
+}
+
+variable "key_vault_id" {
+  type        = string
+  description = "The resource ID of the Key Vault containing the SSL certificate for Application Gateway SSL termination"
 }
 
 /*

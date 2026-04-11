@@ -18,8 +18,8 @@ locals {
           name                = "http-probe"
           protocol            = "Tcp"
           port                = 80
-          interval_in_seconds = 5                   # interval_in_seconds → how often LB sends a probe
-          number_of_probes    = 2                   # number_of_probes → number of consecutive failed probes before LB marks VM as unhealthy
+          interval_in_seconds = 5 # interval_in_seconds → how often LB sends a probe
+          number_of_probes    = 2 # number_of_probes → number of consecutive failed probes before LB marks VM as unhealthy
         }
       ]
 

@@ -20,7 +20,7 @@ variable "lb_name" {
 }
 
 variable "sku" {
-  type    = string
+  type = string
 }
 
 variable "sku_name" {

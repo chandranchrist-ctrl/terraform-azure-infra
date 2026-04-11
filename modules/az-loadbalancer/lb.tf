@@ -24,7 +24,7 @@ resource "azurerm_lb" "lb" {
 
 # Backend Pools
 resource "azurerm_lb_backend_address_pool" "backend_pools" {
-  for_each = { for bp in local.backend_pools : bp.name => bp }
+  for_each        = { for bp in local.backend_pools : bp.name => bp }
   name            = each.value.name
   loadbalancer_id = azurerm_lb.lb.id
 }
@@ -118,9 +118,9 @@ resource "azurerm_lb_nat_rule" "nat_rules" {
 resource "azurerm_lb_outbound_rule" "out_rules" {
   for_each = { for o in local.outbound_rules : o.name => o }
 
-  name            = each.value.name
-  loadbalancer_id = azurerm_lb.lb.id
-  protocol        = each.value.protocol
+  name                     = each.value.name
+  loadbalancer_id          = azurerm_lb.lb.id
+  protocol                 = each.value.protocol
   allocated_outbound_ports = each.value.allocated_outbound_ports
   backend_address_pool_id  = values(azurerm_lb_backend_address_pool.backend_pools)[0].id
 

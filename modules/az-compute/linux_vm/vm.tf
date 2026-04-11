@@ -70,7 +70,12 @@ locals {
   ]
 }
 
-resource "azurerm_windows_virtual_machine" "vm" {
+locals {
+  use_ssh      = var.auth_mode == "ssh"
+  use_password = var.auth_mode == "password"
+}
+
+resource "azurerm_linux_virtual_machine" "vm" {
   for_each = toset(local.vm_names)
 
   name                = each.key
@@ -79,17 +84,40 @@ resource "azurerm_windows_virtual_machine" "vm" {
   resource_group_name = var.resource_group_name
   size                = var.vm_size
 
-  admin_username = data.azurerm_key_vault_secret.admin_username.value
-  admin_password = data.azurerm_key_vault_secret.admin_password.value
-
   network_interface_ids = [
     azurerm_network_interface.nic[each.key].id
   ]
 
+  disable_password_authentication = local.use_ssh
+
+  admin_username = data.azurerm_key_vault_secret.admin_username.value
+  admin_password = local.use_password ? data.azurerm_key_vault_secret.admin_password[0].value : null
+
+  dynamic "admin_ssh_key" {
+    for_each = local.use_ssh ? [1] : []
+
+    content {
+      username   = data.azurerm_key_vault_secret.admin_username.value
+      public_key = data.azurerm_key_vault_secret.ssh_public_key.value
+    }
+  }
+
   availability_set_id = var.enable_availability_set && length(var.zones) == 0 ? azurerm_availability_set.avset[0].id : null
 
-  zone         = length(var.zones) > 0 ? element(var.zones, index(local.vm_names, each.key) % length(var.zones)) : null
-  license_type = var.license_type
+  zone = length(var.zones) > 0 ? element(var.zones, index(local.vm_names, each.key) % length(var.zones)) : null
+
+  os_disk {
+    name                 = "${each.key}-osdisk"
+    caching              = "ReadWrite"
+    storage_account_type = var.os_disk_storage_type
+  }
+
+  source_image_reference {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = var.image_sku
+    version   = "latest"
+  }
 
   boot_diagnostics {
     storage_account_uri = local.use_boot_diag ? (
@@ -99,22 +127,13 @@ resource "azurerm_windows_virtual_machine" "vm" {
     ) : null
   }
 
-  os_disk {
-    name                 = "${each.key}-osdisk"
-    caching              = "ReadWrite"
-    storage_account_type = var.os_disk_storage_type
-  }
-
-  source_image_reference {
-    publisher = "MicrosoftWindowsServer"
-    offer     = "WindowsServer"
-    sku       = var.image_sku
-    version   = "latest"
-  }
-
   identity {
     type = "SystemAssigned"
   }
+
+  custom_data = base64encode(templatefile("${path.module}/cloud-init.tpl", {
+    hostname = each.key
+  }))
 
   tags = var.tags
 }
@@ -145,7 +164,7 @@ resource "azurerm_virtual_machine_data_disk_attachment" "attach" {
   for_each = local.data_disks
 
   managed_disk_id    = azurerm_managed_disk.data_disk[each.key].id
-  virtual_machine_id = azurerm_windows_virtual_machine.vm[each.value.vm].id
+  virtual_machine_id = azurerm_linux_virtual_machine.vm[each.value.vm].id
 
   lun     = each.value.disk.lun
   caching = each.value.disk.caching
