@@ -13,6 +13,10 @@ output "firewall_pip" {
   description = "Public IP of the Firewall"
 }
 
+output "firewall_pip_id" {
+  value = azurerm_public_ip.fwpip.id
+}
+
 output "firewall_mgmt_pip" {
   value       = azurerm_public_ip.fwmgmtpip.ip_address
   description = "Management Public IP of the Firewall"

@@ -1,15 +1,19 @@
-variable "prefix" {
-  description = "Prefix for naming all resources"
+variable "env" {
+  description = "Prefix for route table names"
   type        = string
 }
 
+variable "workload" {
+  type = string
+}
+
 variable "resource_group_name" {
-  description = "Resource Group name"
+  description = "Resource group name"
   type        = string
 }
 
 variable "location" {
-  description = "Location of Application Gateway"
+  description = "Azure region"
   type        = string
 }
 
@@ -142,24 +146,8 @@ variable "key_vault_id" {
 
 */
 
-# variable "key_vault_name" {
-#   type        = string
-#   description = "Name of the existing Key Vault containing the SSL certificate"
-# }
-
-# variable "key_vault_rg" {
-#   type        = string
-#   description = "Resource group of the existing Key Vault"
-# }
-
-# variable "ssl_cert_name" {
-#   type        = string
-#   description = "Name of the SSL certificate in Key Vault"
-# }
-
-# variable "ssl_cert_password" {
-#   type        = string
-#   description = "Password for the SSL certificate if needed"
-#   sensitive   = true
-# }
+variable "ssl_cert_secret_id" {
+  type        = string
+  description = "Key Vault secret ID for SSL certificate"
+}
 

@@ -1,7 +1,7 @@
 # Public IP for Application Gateway
 resource "azurerm_public_ip" "appgw-pip" {
   count               = var.enable_public_ip ? 1 : 0 # count = 0 → resource is not created if enable_public_ip = false.
-  name                = "${var.prefix}-appgw-pip"
+  name                = "${var.env}-appgw-pip"
   location            = var.location
   resource_group_name = var.resource_group_name
   allocation_method   = var.allocation_method
@@ -10,7 +10,7 @@ resource "azurerm_public_ip" "appgw-pip" {
 
 # Application Gateway
 resource "azurerm_application_gateway" "appgw" {
-  name                = "${var.prefix}-appgw"
+  name                = "${var.env}-appgw"
   resource_group_name = var.resource_group_name
   location            = var.location
   tags                = var.tags
@@ -24,28 +24,9 @@ resource "azurerm_application_gateway" "appgw" {
 
   # Gateway IP Configuration
   gateway_ip_configuration {
-    name      = "${var.prefix}-appgw-subnet" # Logical name for the gateway IP configuration
+    name      = "${var.env}-appgw-subnet" # Logical name for the gateway IP configuration
     subnet_id = var.subnet_id                # Subnet ID where the Application Gateway will be deployed
   }
-
-  # # Frontend IP Configuration
-  #   frontend_ip_configuration {
-  #     count = var.frontend_ip_name != null ? 1 : 0
-  #     name                 = "${var.prefix}-appgw-frontend-ip"              # Logical name for the frontend IP configuration
-
-  #     # Attach public IP only if toggle is true;
-  #     public_ip_address_id = var.enable_public_ip ? azurerm_public_ip.appgw-pip[0].id : null          # public_ip_address_id: Optional, attach a public IP for Inbound access;
-
-  #     # Private IP allocation type; optional: "Dynamic" or "Static"
-  #     private_ip_address_allocation = var.private_ip_allocation                 # var: "Dynamic" or "Static"
-  #   }
-
-  # # Frontend Port
-  #   frontend_port {
-  #     name = "${var.prefix}-appgw-frontend-port"    # Logical name for the frontend port
-  #      count = var.frontend_port_name != null ? 1 : 0
-  #     port = var.port                  # Port number for the frontend port (e.g., 80 for HTTP, 443 for HTTPS) 
-  #   }
 
   identity {
     type = "SystemAssigned"
@@ -54,7 +35,7 @@ resource "azurerm_application_gateway" "appgw" {
   dynamic "frontend_ip_configuration" {
     for_each = var.frontend_ip_name != null ? [var.frontend_ip_name] : []
     content {
-      name = "${var.prefix}-appgw-frontend-ip"
+      name = "${var.env}-appgw-fe-ip"
 
       # Attach public IP only if toggle is true
       public_ip_address_id = var.enable_public_ip ? azurerm_public_ip.appgw-pip[0].id : null
@@ -67,7 +48,7 @@ resource "azurerm_application_gateway" "appgw" {
   dynamic "frontend_port" {
     for_each = var.frontend_port_name != null ? [var.frontend_port_name] : []
     content {
-      name = "${var.prefix}-appgw-frontend-port"
+      name = "${var.env}-appgw-fe-port"
       port = var.port
     }
   }
@@ -75,8 +56,8 @@ resource "azurerm_application_gateway" "appgw" {
   # SSL Certificate for SSL Termination 
   # Note: This tells Azure: “Attach this certificate to Application Gateway frontend listener for HTTPS termination.”
   ssl_certificate {
-    name                = data.azurerm_key_vault_certificate.biztalk_ssl.name
-    key_vault_secret_id = data.azurerm_key_vault_certificate.biztalk_ssl.id
+    name                = "${var.env}-${var.workload}-ssl-cert"
+    key_vault_secret_id = var.ssl_cert_secret_id
   }
 
   # For SSL upload from GIT.

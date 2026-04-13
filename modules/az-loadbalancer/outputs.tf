@@ -14,9 +14,9 @@ output "public_ip_address" {
   value = var.frontend_ip_type == "Public" ? azurerm_public_ip.lb_public_ip[0].ip_address : ""
 }
 
-output "nat_pool_ids" {
-  value = { for k, v in azurerm_lb_nat_pool.nat_pools : k => v.id }
-}
+# output "nat_pool_ids" {
+#   value = { for k, v in azurerm_lb_nat_pool.nat_pools : k => v.id }
+# }
 
 output "nat_rule_ids" {
   value = { for k, v in azurerm_lb_nat_rule.nat_rules : k => v.id }
@@ -37,7 +37,7 @@ output "lb_rule_ids" {
 output "nat_rule_mapping" {
   value = {
     for k, v in azurerm_lb_nat_rule.nat_rules : k => {
-      backend_pool  = v.pool # The backend pool name from locals merge
+      backend_pool  = v.pool               # The backend pool name from locals merge
       vm_id         = v.backend_ip_configuration_id
       frontend_port = v.frontend_port
       backend_port  = v.backend_port

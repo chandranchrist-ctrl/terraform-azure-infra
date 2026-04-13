@@ -2,14 +2,24 @@ locals {
   nat_rules = [
     for r in [
       {
-        name                = "web-1"
-        enabled             = true
-        source_addresses    = ["*"]
-        destination_address = var.firewall_public_ip
-        destination_ports   = ["80"]
-        translated_address  = "10.2.1.70"
-        translated_port     = "80"
-        protocols           = ["TCP"]
+        name                  = "http-to-web"
+        enabled               = true
+        source_addresses      = ["*"]
+        destination_addresses = var.firewall_public_ip
+        destination_ports     = ["80"]
+        translated_address    = "10.2.1.70"
+        translated_port       = "80"
+        protocols             = ["TCP"]
+      },
+      {
+        name                  = "https-to-web"
+        enabled               = true
+        source_addresses      = ["*"]
+        destination_addresses = var.firewall_public_ip
+        destination_ports     = ["443"]
+        translated_address    = "10.2.1.70"
+        translated_port       = "443"
+        protocols             = ["TCP"]
       }
     ] : r if r.enabled
   ]

@@ -39,8 +39,8 @@ locals {
         name     = "ip-listener"
         protocol = "Http"
         # No host_name, so it catches requests by IP
-        frontend_ip_configuration_name = "${var.prefix}-appgw-frontend-ip"
-        frontend_port_name             = "${var.prefix}-appgw-frontend-port"
+        frontend_ip_configuration_name = "${var.env}-appgw-fe-ip"
+        frontend_port_name             = "${var.env}-appgw-fe-port"
       }
     ]
 

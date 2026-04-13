@@ -1,4 +1,4 @@
-variable "prefix" {
+variable "env" {
   type = string
 }
 
@@ -15,6 +15,7 @@ variable "tags" {
   default = {}
 }
 
+# Firewall Policy related Variables
 variable "all_vm_cidrs" {
   type        = list(string)
   description = "List of CIDRs for VM subnets / sources"

@@ -1,4 +1,4 @@
-variable "prefix" {
+variable "env" {
   description = "Prefix for route table names"
   type        = string
 }
@@ -19,6 +19,8 @@ variable "tags" {
   default     = {}
 }
 
+
+# Voriables related to route table creation
 variable "create_rt" {
   description = "Flag to create route tables"
   type        = bool

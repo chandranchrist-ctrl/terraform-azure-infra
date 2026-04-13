@@ -54,15 +54,34 @@ variable "certificates" {
   }))
 }
 
-variable "admin_username" {
-  type      = string
-  sensitive = true
+# variable "admin_username" {
+#   type      = string
+#   sensitive = true
+# }
+
+# variable "admin_password" {
+#   type      = string
+#   sensitive = true
+# }
+
+# variable "mysql-username-secret" {
+#   type      = string
+#   sensitive = true
+# }
+
+# variable "mysql-password-secret" {
+#   type      = string
+#   sensitive = true
+# }
+
+variable "secrets" {
+  type      = map(string)
 }
 
-variable "admin_password" {
-  type      = string
-  sensitive = true
+variable "ssh_public_key" {
+  type = string
 }
+
 
 # variable "audit_storage_account_id" {
 #   type        = string

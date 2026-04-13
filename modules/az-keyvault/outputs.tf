@@ -12,3 +12,11 @@ output "key_vault_uri" {
   value       = azurerm_key_vault.kv.vault_uri
   description = "Key Vault URI"
 }
+
+output "certificate_secret_ids" {
+  value = {
+    for cert in azurerm_key_vault_certificate.cert :
+    cert.name => cert.secret_id
+  }
+  description = "Map of all certificate names to secret IDs"
+}

@@ -5,7 +5,7 @@ locals {
 resource "azurerm_route_table" "rt" {
   for_each = var.create_rt ? local.route_tables_map : {}
 
-  name                = "${var.prefix}-${each.key}-rt"
+  name                = "${var.env}-${each.key}-rt"
   location            = var.location
   resource_group_name = var.resource_group_name
   tags                = var.tags

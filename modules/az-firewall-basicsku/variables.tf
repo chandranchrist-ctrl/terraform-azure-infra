@@ -1,4 +1,4 @@
-variable "prefix" {
+variable "env" {
   type = string
 }
 
@@ -15,11 +15,7 @@ variable "tags" {
   default = {}
 }
 
-variable "subnets_map" {
-  type        = map(string)
-  description = "Map of subnet name → subnet ID"
-}
-
+# Variables for Firewall Public IP creation
 variable "allocation_method" {
   type    = string
   default = "Static"
@@ -30,6 +26,13 @@ variable "sku" {
   default = "Standard"
 }
 
+variable "firewall_public_ip" {
+  type        = string
+  description = "Public IP of Firewall"
+  default     = null
+}
+
+#  Variables for Firewall configuration 
 variable "sku_name" {
   type    = string
   default = "AZFW_VNet"
@@ -37,7 +40,6 @@ variable "sku_name" {
 
 variable "sku_tier" {
   type    = string
-  default = "Standard"
 }
 
 variable "zones" {
@@ -50,8 +52,7 @@ variable "all_vm_cidrs" {
   description = "List of VM CIDRs to use in rules"
 }
 
-variable "firewall_public_ip" {
-  type        = string
-  description = "Public IP of Firewall"
-  default     = null
+variable "subnets_map" {
+  type        = map(string)
+  description = "Map of subnet name → subnet ID"
 }

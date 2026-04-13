@@ -10,6 +10,10 @@ output "firewall_pip" {
   value = azurerm_public_ip.fwpip.ip_address
 }
 
+output "firewall_pip_id" {
+  value = azurerm_public_ip.fwpip.id
+}
+
 output "firewall_mgmt_pip" {
   value = azurerm_public_ip.fwmgmtpip.ip_address
 }

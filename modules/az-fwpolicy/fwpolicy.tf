@@ -1,12 +1,12 @@
 resource "azurerm_firewall_policy" "fwpolicy" {
-  name                = "${var.prefix}-fwpolicy"
+  name                = "${var.env}-fwpolicy"
   location            = var.location
   resource_group_name = var.resource_group_name
   tags                = var.tags
 }
 
 resource "azurerm_firewall_policy_rule_collection_group" "main" {
-  name               = "${var.prefix}-rcg"
+  name               = "${var.env}-fw-rcg"
   firewall_policy_id = azurerm_firewall_policy.fwpolicy.id
   priority           = 100
 

@@ -1,6 +1,6 @@
 # Public IP for Firewall
 resource "azurerm_public_ip" "fwpip" {
-  name                = "${var.prefix}-fwpip-${var.sku_tier}"
+  name                = "${var.env}-fwpip-${var.sku_tier}"
   location            = var.location
   resource_group_name = var.resource_group_name
   allocation_method   = var.allocation_method
@@ -9,7 +9,7 @@ resource "azurerm_public_ip" "fwpip" {
 
 # Public IP for Firewall Management
 resource "azurerm_public_ip" "fwmgmtpip" {
-  name                = "${var.prefix}-fwmgmtpip-${var.sku_tier}"
+  name                = "${var.env}-fwmgmtpip-${var.sku_tier}"
   location            = var.location
   resource_group_name = var.resource_group_name
   allocation_method   = var.allocation_method
@@ -24,7 +24,7 @@ locals {
 
 # Azure Firewall
 resource "azurerm_firewall" "fw" {
-  name                = "${var.prefix}-fw-${var.sku_tier}"
+  name                = "${var.env}-fw-${var.sku_tier}"
   location            = var.location
   resource_group_name = var.resource_group_name
   sku_name            = var.sku_name

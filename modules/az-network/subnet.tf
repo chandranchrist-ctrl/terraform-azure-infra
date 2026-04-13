@@ -1,11 +1,12 @@
 locals {
   subnet_map = merge([
     for vnet_key, subnets in var.subnet_address_space : {
-      for subnet_key, cidr in subnets :
+      for subnet_key, subnet in subnets :
       "${vnet_key}-${subnet_key}" => {
         vnet_key   = vnet_key
         subnet_key = subnet_key
-        cidr       = cidr
+        cidr       = subnet.cidr
+        tags       = try(subnet.tags, {})
       }
     }
   ]...)
@@ -14,10 +15,10 @@ locals {
 resource "azurerm_subnet" "subnet" {
   for_each = local.subnet_map
 
-  name = (
+    name = (
     can(regex("subnet$", lower(each.value.subnet_key)))
     ? each.value.subnet_key
-    : "${var.prefix}-${each.value.vnet_key}-${each.value.subnet_key}-subnet"
+    : "${var.env}-${each.value.vnet_key}-${each.value.subnet_key}-subnet"
   )
 
   resource_group_name  = var.resource_group_name

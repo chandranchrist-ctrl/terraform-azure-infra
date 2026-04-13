@@ -1,3 +1,21 @@
+# Public IP for Firewall
+resource "azurerm_public_ip" "fwpip" {
+  name                = "${var.env}-fwpip"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  allocation_method   = var.allocation_method
+  sku                 = var.sku
+}
+
+# Public IP for Management
+resource "azurerm_public_ip" "fwmgmtpip" {
+  name                = "${var.env}-fwmgmtpip"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  allocation_method   = var.allocation_method
+  sku                 = var.sku
+}
+
 # Pick subnets automatically
 locals {
   subnet_firewall_id   = lookup(var.subnets_map, "AzureFirewallSubnet", null)
@@ -11,27 +29,9 @@ locals {
   )
 }
 
-# Public IP for Firewall
-resource "azurerm_public_ip" "fwpip" {
-  name                = "${var.prefix}-fwpip"
-  location            = var.location
-  resource_group_name = var.resource_group_name
-  allocation_method   = var.allocation_method
-  sku                 = var.sku
-}
-
-# Public IP for Management
-resource "azurerm_public_ip" "fwmgmtpip" {
-  name                = "${var.prefix}-fwmgmtpip"
-  location            = var.location
-  resource_group_name = var.resource_group_name
-  allocation_method   = var.allocation_method
-  sku                 = var.sku
-}
-
 # Azure Firewall
 resource "azurerm_firewall" "fw" {
-  name                = "${var.prefix}-fw"
+  name                = "${var.env}-fw"
   location            = var.location
   resource_group_name = var.resource_group_name
   sku_name            = var.sku_name

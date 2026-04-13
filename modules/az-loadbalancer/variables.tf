@@ -1,18 +1,26 @@
-variable "prefix" {
+variable "env" {
+  description = "Prefix for route table names"
+  type        = string
+}
+
+variable "workload" {
   type = string
 }
 
 variable "resource_group_name" {
-  type = string
+  description = "Resource group name"
+  type        = string
 }
 
 variable "location" {
-  type = string
+  description = "Azure region"
+  type        = string
 }
 
 variable "tags" {
-  type    = map(string)
-  default = {}
+  description = "Tags for resources"
+  type        = map(string)
+  default     = {}
 }
 
 variable "lb_name" {
@@ -20,7 +28,7 @@ variable "lb_name" {
 }
 
 variable "sku" {
-  type = string
+  type    = string
 }
 
 variable "sku_name" {

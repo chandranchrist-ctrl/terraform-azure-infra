@@ -21,16 +21,18 @@ provider "azurerm" {
 }
 
 locals {
-  prefix = "uat"
+  env = "uat"
+  workload = "biztalk"
 }
 
 module "rg" {
   source = "../../modules/az-rg"
 
-  prefix = local.prefix
+  env = local.env
+  workload = local.workload
 
   # Input Variables
-  resource_group_name     = "${local.prefix}-rg"
+  resource_group_name     = "${local.env}-rg"
   resource_group_location = "eastus"
 
   tags = {
@@ -43,54 +45,84 @@ module "rg" {
 module "virtual_network" {
   source = "../../modules/az-network"
 
-  prefix              = local.prefix
+  env = local.env
+  workload = local.workload
+
   resource_group_name = module.rg.resource_group_name
   location            = module.rg.resource_group_location
   tags                = module.rg.tags
 
   # VNet CIDR
-  vnet_address_space = {
+  vnet_address_space = {                # VNet key must match the corresponding key in subnet_address_space to map subnets to the correct VNet
     hub   = ["10.0.0.0/16"]
     spoke = ["10.1.0.0/16"]
   }
 
   # Subnet CIDR
-  subnet_address_space = {
-    hub = {
-      AzureFirewallSubnet           = ["10.0.0.0/26"]
-      AppGatewaySubnet              = ["10.0.2.0/24"]
-      AzureFirewallManagementSubnet = ["10.0.3.0/26"]
+
+  /*
+  =========================================================
+  IMPORTANT GLOBAL RULE (DO NOT MODIFY WITHOUT CODE CHANGE)
+  
+  This module depends on subnet tags for automation:
+  
+    type = "infra"     → excluded from NSG/ASG creation
+    type = "workload"  → included for NSG/ASG + security rules
+  
+  If you change/remove these values, you MUST update:
+    - NSG filtering logic
+    - ASG creation logic
+    - subnet_map conditions
+  =========================================================
+  */
+             
+subnet_address_space = {            # Subnet key must align with the VNet key to ensure subnets are created within the correct VNet
+  hub = {
+    AzureFirewallSubnet = {
+      cidr = ["10.0.0.0/26"]
+      tags = { type = "infra" }
     }
-    spoke = {
-      web = ["10.1.1.0/26"] #  If subnet name is changed, update the "subnet_keys" in rtvalues.tf accordingly
-      app = ["10.1.1.64/26"]
-      db  = ["10.1.1.128/26"]
+
+    AppGatewaySubnet = {
+      cidr = ["10.0.2.0/24"]
+      tags = { type = "infra" }
+    }
+
+    AzureFirewallManagementSubnet = {
+      cidr = ["10.0.3.0/26"]
+      tags = { type = "infra" }
+    }
+
+    AzureBastionSubnet = {
+      cidr = ["10.0.4.0/26"]
+      tags = { type = "infra" }
     }
   }
 
-  # Optional ASG from root
-  asg = module.asg.asg # attach the ASG to the network module for NSG rule creation
-}
+  spoke = {
+    web = {
+      cidr = ["10.1.1.0/26"]
+      tags = { type = "workload" }
+    }
 
-module "asg" {
-  source = "../../modules/az-asg"
+    app = {
+      cidr = ["10.1.1.64/26"]
+      tags = { type = "workload" }
+    }
 
-  prefix = local.prefix
-
-  application_name = "biztalk"
-
-  resource_group_name = module.rg.resource_group_name
-  location            = module.rg.resource_group_location
-  tags                = module.rg.tags
-
-  create_asg = false           # set to true to create ASGs
-  ports      = [80, 443, 1433] # ports this ASG allows
+    db = {
+      cidr = ["10.1.1.128/26"]
+      tags = { type = "workload" }
+      }
+    }
+  }
 }
 
 module "firewall_basic" {
   source = "../../modules/az-firewall-basicsku"
 
-  prefix              = local.prefix
+  env = local.env
+
   resource_group_name = module.rg.resource_group_name
   location            = module.rg.resource_group_location
   tags                = module.rg.tags
@@ -100,9 +132,10 @@ module "firewall_basic" {
   sku               = "Standard"
 
   #FW Configuration
-  sku_name = "AZFW_VNet"
+  sku_name = "AZFW_VNet"            # Firewall deployed in a Virtual Network (not Secure Hub); Basic SKU only supports AZFW_VNet
   sku_tier = "Basic"
   zones    = []
+  firewall_public_ip = module.firewall_basic.firewall_pip
 
   all_vm_cidrs = concat(["10.2.1.0/26"], ["10.2.1.64/26"])
 
@@ -115,7 +148,7 @@ module "firewall_basic" {
 # module "firewall" {
 #   source = "../../modules/az-firewall"
 
-#   prefix = "${local.prefix}-firewall"
+#   env = local.env
 
 #   resource_group_name = module.rg.resource_group_name
 #   location            = module.rg.resource_group_location
@@ -139,7 +172,7 @@ module "firewall_basic" {
 # module "fw_policy" {
 #   source = "../../modules/az-fwpolicy"
 
-#   prefix = local.prefix
+#   env = local.env
 
 #   resource_group_name = module.rg.resource_group_name
 #   location            = module.rg.resource_group_location
@@ -155,7 +188,8 @@ module "route_tables" {
 
   create_rt = false
 
-  prefix              = "${local.prefix}-rt"
+  env              = "${local.env}-rt"
+
   resource_group_name = module.rg.resource_group_name
   location            = module.rg.resource_group_location
   tags                = module.rg.tags
@@ -174,7 +208,7 @@ module "vnet_peering" {
 
   peerings = {
     hub_to_spoke = {
-      name                    = "${local.prefix}-hub-to-spoke"
+      name                    = "${local.env}-hub-to-spoke"
       resource_group          = module.rg.resource_group_name
       vnet_name               = module.virtual_network.vnets["hub"].name # use name, not ID
       remote_vnet_id          = module.virtual_network.vnets["spoke"].id
@@ -184,7 +218,7 @@ module "vnet_peering" {
       use_remote_gateways     = false
     },
     spoke_to_hub = {
-      name                    = "${local.prefix}-spoke-to-hub"
+      name                    = "${local.env}-spoke-to-hub"
       resource_group          = module.rg.resource_group_name
       vnet_name               = module.virtual_network.vnets["spoke"].name # use name, not ID
       remote_vnet_id          = module.virtual_network.vnets["hub"].id
@@ -199,9 +233,10 @@ module "vnet_peering" {
 module "loadbalancer" {
   source = "../../modules/az-loadbalancer"
 
-  prefix = local.prefix
+  env = local.env
+  workload = local.workload
 
-  lb_name = "${local.prefix}-lb-Public" # change to "${local.prefix}-lb-Private" for private LB
+  lb_name = "${local.env}-${local.workload}-lb-Pub" # change to "${local.env}-lb-Private" for private LB
 
   resource_group_name = module.rg.resource_group_name
   location            = module.rg.resource_group_location
@@ -221,7 +256,8 @@ module "loadbalancer" {
 module "appgw" {
   source = "../../modules/az-applicationgateway"
 
-  prefix = local.prefix
+  env = local.env
+  workload = local.workload
 
   resource_group_name = module.rg.resource_group_name
   location            = module.rg.resource_group_location
@@ -232,7 +268,7 @@ module "appgw" {
   sku               = "Standard"
 
   # SKU configuration for Application Gateway
-  sku_name     = "${local.prefix}-appgw-Standard_v2" # The SKU name (Standard_v2, WAF_v2, etc.)
+  sku_name     = "${local.env}-appgw-Standard_v2" # The SKU name (Standard_v2, WAF_v2, etc.)
   sku_tier     = "Standard_v2"                       # The SKU tier (Standard_v2, WAF_v2)
   sku_capacity = 1                                   # Capacity: Number of instances for the gateway 
 
@@ -240,8 +276,8 @@ module "appgw" {
   subnet_id = module.virtual_network.subnets["hub"]["AppGatewaySubnet"] # Subnet ID where the Application Gateway will be deployed 
 
   key_vault_id = module.key_vault.key_vault_id
-
-
+  ssl_cert_secret_id = module.key_vault.certificate_secret_ids["wildcard-cert"]
+  
   # Frontend IP Configuration
   enable_public_ip      = true     # set to false to create internal-only App Gateway without public IP
   private_ip_allocation = "Static" # Private IP allocation type for Application Gateway frontend (Dynamic or Static)
@@ -252,119 +288,123 @@ module "appgw" {
 
   # Required variables for routing modules
   appgw_hostname     = "uat.biztalk.com"
-  frontend_ip_name   = "${local.prefix}-appgw-frontend-ip"
-  frontend_port_name = "${local.prefix}-appgw-frontend-port"
+  frontend_ip_name   = "${local.env}-appgw-fe-ip"
+  frontend_port_name = "${local.env}-appgw-fe-port"
+
+  depends_on = [
+    module.key_vault
+  ]  
 }
 
-module "windows_vm" {
-  source = "../../modules/az-compute/windows_vm"
+# module "windows_vm" {
+#   source = "../../modules/az-compute/windows_vm"
 
-  resource_group_name = module.rg.resource_group_name
-  location            = module.rg.resource_group_location
-  tags                = module.rg.tags
+#   resource_group_name = module.rg.resource_group_name
+#   location            = module.rg.resource_group_location
+#   tags                = module.rg.tags
 
-  vm_name  = "${local.prefix}-biztalk-ap"
-  vm_count = 2
+#   vm_name  = "${local.env}-biztalk-ap"
+#   vm_count = 2
 
-  vm_size   = "Standard_B2s"
-  image_sku = "2019-Datacenter"
+#   vm_size   = "Standard_B2s"
+#   image_sku = "2019-Datacenter"
 
-  # 🔐 KEY VAULT INPUTS (NEW)
-  key_vault_name = "your-kv-name" # change manually when needed; ensure this KV exists and has the necessary secrets for admin username and password
-  key_vault_rg   = module.rg.resource_group_name
-  key_vault_id   = module.key_vault.key_vault_id
+#   # 🔐 KEY VAULT INPUTS (NEW)
+#   key_vault_name = "your-kv-name" # change manually when needed; ensure this KV exists and has the necessary secrets for admin username and password
+#   key_vault_rg   = module.rg.resource_group_name
+#   key_vault_id   = module.key_vault.key_vault_id
 
-  admin_username_secret_name = "admin-username-secret"
-  admin_password_secret_name = "admin-password-secret"
+#   admin_username_secret_name = "admin-username-secret"
+#   admin_password_secret_name = "admin-password-secret"
 
-  subnet_id = module.virtual_network.subnets["spoke"]["app"]
+#   subnet_id = module.virtual_network.subnets["spoke"]["app"]
 
-  private_ip_allocation = "static"
+#   private_ip_allocation = "static"
 
-  os_disk_storage_type = "Standard_LRS"
+#   os_disk_storage_type = "Standard_LRS"
 
-  enable_availability_set = false
-  availability_set_name   = "biztalk-avset"
+#   enable_availability_set = false
+#   availability_set_name   = "biztalk-avset"
 
-  license_type = "Windows_Server" # Sample: "Windows_Server", "RHEL", "SLES", "Windows_Client"; adjust based on your image and licensing needs
-
-
-  zones = [] # Sample: ["1", "2", "3"] 
+#   license_type = "Windows_Server" # Sample: "Windows_Server", "RHEL", "SLES", "Windows_Client"; adjust based on your image and licensing needs
 
 
-  enable_public_ip = false
-
-  enable_boot_diagnostics               = true
-  boot_diagnostics_mode                 = "create" # "none", "existing", or "create"
-  boot_diagnostics_storage_account_name = "uatbiztalkdiag"
-
-  data_disks = [
-    {
-      size_gb      = 128
-      lun          = 0
-      caching      = "ReadWrite"
-      storage_type = "Standard_LRS"
-    }
-  ]
-}
-
-module "linux_vm" {
-  source = "../../modules/az-compute/linux_vm"
-
-  resource_group_name = module.rg.resource_group_name
-  location            = module.rg.resource_group_location
-  tags                = module.rg.tags
-
-  vm_name  = "${local.prefix}-nginx-lnx"
-  vm_count = 1
-  vm_size  = "Standard_B2s"
-
-  image_sku = "24_04-lts"
-
-  subnet_id = module.virtual_network.subnets["spoke"]["web"]
-
-  private_ip_allocation = "static"
-
-  os_disk_storage_type = "Standard_LRS"
-
-  enable_public_ip = false
-
-  enable_availability_set = false
-
-  availability_set_name = "biztalk-avset"
-
-  zones = [] # Sample: ["1", "2", "3"] 
-
-  enable_boot_diagnostics               = true
-  boot_diagnostics_mode                 = "create" # "none", "existing", or "create"
-  boot_diagnostics_storage_account_name = "uatbiztalkdiag"
-
-  # 🔐 KEY VAULT INPUTS (NEW)
-  key_vault_name = "your-kv-name" # change manually when needed; ensure this KV exists and has the necessary secrets for admin username and password
-  key_vault_rg   = module.rg.resource_group_name
-  key_vault_id   = module.key_vault.key_vault_id
-
-  auth_mode = "ssh" # "password" or "ssh"
+#   zones = [] # Sample: ["1", "2", "3"] 
 
 
-  admin_username_secret_name = "admin-username-secret"
-  admin_password_secret_name = "admin-password-secret"
-  ssh_public_key_secret_name = "linux-ssh-public-key"
+#   enable_public_ip = false
 
-  #   data_disks = [
-  #   {
-  #     # size_gb = 128
-  #     # lun     = 0
-  #     # caching = "ReadWrite"
-  #     # storage_type = "Standard_LRS"
-  #   }
-  # ]
-}
+#   enable_boot_diagnostics               = true
+#   boot_diagnostics_mode                 = "create" # "none", "existing", or "create"
+#   boot_diagnostics_storage_account_name = "uatbiztalkdiag"
+
+#   data_disks = [
+#     {
+#       size_gb      = 128
+#       lun          = 0
+#       caching      = "ReadWrite"
+#       storage_type = "Standard_LRS"
+#     }
+#   ]
+# }
+
+# module "linux_vm" {
+#   source = "../../modules/az-compute/linux_vm"
+
+#   resource_group_name = module.rg.resource_group_name
+#   location            = module.rg.resource_group_location
+#   tags                = module.rg.tags
+
+#   vm_name  = "${local.env}-nginx-lnx"
+#   vm_count = 1
+#   vm_size  = "Standard_B2s"
+
+#   image_sku = "24_04-lts"
+
+#   subnet_id = module.virtual_network.subnets["spoke"]["web"]
+
+#   private_ip_allocation = "static"
+
+#   os_disk_storage_type = "Standard_LRS"
+
+#   enable_public_ip = false
+
+#   enable_availability_set = false
+
+#   availability_set_name = "biztalk-avset"
+
+#   zones = [] # Sample: ["1", "2", "3"] 
+
+#   enable_boot_diagnostics               = true
+#   boot_diagnostics_mode                 = "create" # "none", "existing", or "create"
+#   boot_diagnostics_storage_account_name = "uatbiztalkdiag"
+
+#   # 🔐 KEY VAULT INPUTS (NEW)
+#   key_vault_name = "your-kv-name" # change manually when needed; ensure this KV exists and has the necessary secrets for admin username and password
+#   key_vault_rg   = module.rg.resource_group_name
+#   key_vault_id   = module.key_vault.key_vault_id
+
+#   auth_mode = "ssh" # "password" or "ssh"
+
+
+#   admin_username_secret_name = "admin-username-secret"
+#   admin_password_secret_name = "admin-password-secret"
+#   ssh_public_key_secret_name = "linux-ssh-public-key"
+
+#   #   data_disks = [
+#   #   {
+#   #     # size_gb = 128
+#   #     # lun     = 0
+#   #     # caching = "ReadWrite"
+#   #     # storage_type = "Standard_LRS"
+#   #   }
+#   # ]
+# }
 
 module "key_vault" {
   source = "../../modules/az-keyvault"
 
-  name = "${local.prefix}-kv"
+  name = "${local.env}-kv"
 
   location            = module.rg.resource_group_location
   resource_group_name = module.rg.resource_group_name
@@ -388,15 +428,22 @@ module "key_vault" {
 
   allowed_subnet_ids = [
     module.virtual_network.subnets["spoke"]["app"],
+    module.virtual_network.subnets["spoke"]["db"],
     module.virtual_network.subnets["hub"]["AppGatewaySubnet"]
   ]
 
-  admin_username = "HBAdmin"
-  admin_password = "Qwerty123!"
+  ssh_public_key = file("${path.module}/ssh/id_rsa.pub")
+
+  secrets = {
+  admin-username = "HBAdmin",
+  admin-password = "Qwerty123!"
+  mysql-username = "sqladmin"
+  mysql-password = "SQLP@ssword!23!"
+}
 
   certificates = [
     {
-      name     = "appgw-cert"
+      name     = "wildcard-cert"
       pfx_path = "./certs/certificate.pfx"
       password = "ChangeMe123!"
     }
@@ -408,34 +455,153 @@ module "key_vault" {
 
 }
 
-module "storage_account" {
-  source = "../../modules/az-storage"
+# module "storage_account" {
+#   source = "../../modules/az-storage"
 
-  storage_account_name = "${local.prefix}-storageacc"
+#   storage_account_name = "${local.env}-storageacc"
 
-  location            = module.rg.resource_group_location
+#   location            = module.rg.resource_group_location
+#   resource_group_name = module.rg.resource_group_name
+#   tags                = module.rg.tags
+
+#   account_kind          = "StorageV2" # StorageV2, Storage, BlobStorage, FileStorage, BlockBlobStorage
+#   account_tier          = "Standard"  # Standard or Premium
+#   replication_type      = "LRS"       # LRS, GRS, RAGRS, ZRS, GZRS, RAGZRS
+#   dns_endpoint_type     = "Standard"  # Standard or MicrosoftEndpointsOnly
+#   public_network_access = false       # disable public endpoint for enhanced security; access will be via private endpoint or service endpoints from allowed subnets
+
+#   # retention / governance
+#   blob_versioning_enabled         = false # enable blob versioning for data protection and recovery
+#   blob_delete_retention_days      = 1     # enable soft delete for blobs with a retention period of 1 day; adjust as needed
+#   container_delete_retention_days = 1     # enable soft delete for containers with a retention period of 1 day; adjust as needed
+
+#   # immutability
+#   # immutability_period_days = 1
+
+#   # network rules
+#   allowed_subnet_ids = [
+#     module.virtual_network.subnets["spoke"]["web"],
+#     module.virtual_network.subnets["spoke"]["app"],
+#     module.virtual_network.subnets["spoke"]["db"]
+#   ]
+#   allowed_ip_rules = ["49.37.215.245/32"] # adjust in real lab
+# }
+
+module "bastion" {
+  source = "../../modules/az-bastion"
+
+  env              = local.env
+
   resource_group_name = module.rg.resource_group_name
+  location            = module.rg.resource_group_location
   tags                = module.rg.tags
 
-  account_kind          = "StorageV2" # StorageV2, Storage, BlobStorage, FileStorage, BlockBlobStorage
-  account_tier          = "Standard"  # Standard or Premium
-  replication_type      = "LRS"       # LRS, GRS, RAGRS, ZRS, GZRS, RAGZRS
-  dns_endpoint_type     = "Standard"  # Standard or MicrosoftEndpointsOnly
-  public_network_access = false       # disable public endpoint for enhanced security; access will be via private endpoint or service endpoints from allowed subnets
+  subnet_id = module.virtual_network.subnets["hub"]["AzureBastionSubnet"].id
 
-  # retention / governance
-  blob_versioning_enabled         = false # enable blob versioning for data protection and recovery
-  blob_delete_retention_days      = 1     # enable soft delete for blobs with a retention period of 1 day; adjust as needed
-  container_delete_retention_days = 1     # enable soft delete for containers with a retention period of 1 day; adjust as needed
+    # =========================================================
+  # PUBLIC IP CONFIGURATION (BASTION FRONTEND)
+  # =========================================================
 
-  # immutability
-  # immutability_period_days = 1
+  # If true → Bastion will NOT create its own Public IP
+  # Instead it will reuse an existing one (from firewall module)
+  
+  use_firewall_public_ip = true  
 
-  # network rules
-  allowed_subnet_ids = [
-    module.virtual_network.subnets["spoke"]["web"],
-    module.virtual_network.subnets["spoke"]["app"],
-    module.virtual_network.subnets["spoke"]["db"]
-  ]
-  allowed_ip_rules = ["49.37.215.245/32"] # adjust in real lab
+  # Existing Public IP resource ID coming from firewall module
+  # This is NOT used for firewall routing — only as Bastion frontend IP
+
+  firewall_public_ip_id   = module.firewall_basic.firewall_pip_id
+
+  # Bastion SKU
+  sku = "Standard"
+
+  tunneling_enabled = true
+  ip_connect_enabled = true
+  copy_paste_enabled = true
+  file_copy_enabled  = true
+
+  zones    = null   # zone = ["1","2","3"]
+
+  kerberos_enabled = false
+}
+
+
+module "mysql" {
+  source = "../../modules/az-compute/rds/mysql-flexible"
+
+  env = local.env
+  workload = local.workload
+
+  db_servername = "${local.env}-${local.workload}-db1"
+  db_name = "${local.env}_${local.workload}_db1"
+
+
+  resource_group_name = module.rg.resource_group_name
+  location            = module.rg.resource_group_location
+  tags                = module.rg.tags
+
+  # Server Configuration
+
+  sku_name = "GP_Standard_D2ds_v4"
+  db_version = "8.0"  
+  zone = null
+
+  # DB Server to be deployed as public or private 
+  enable_private_network = true
+  enable_private_dns = false
+
+  vnet_id = module.virtual_network.vnets["spoke"].id
+  delegated_subnet_id  = module.virtual_network.subnets["db"].id
+
+  # DB allow NACLs from public inbound
+  allowed_ips = ["49.37.211.249"]
+
+  storage_size_gb = 2
+ 
+
+  # Enable High Availability (HA)
+  enable_ha = false               # false → single instance (no failover); true  → enables standby replica automatically (managed by Azure)
+  ha_mode = "ZoneRedundant"       # HA mode (only used when enable_ha = true); ZoneRedundant → primary + standby in different AZs (best for production); SameZone → primary + standby in same AZ (lower cost, less resilient)
+  replication_role = "None"     # Replication role of this server; None  → standalone server (normal case); Replica → read replica (used for scaling reads)
+  replica_location = null     # Location for replica server (only used when replication_role = "Replica"); Must be a valid Azure region (e.g., "East US", "Central India"); null → not used when replication is disabled
+
+
+  # Key Vault Configuration
+  key_vault_id = module.key_vault.key_vault_id
+  mysql_username_secret_name = "mysql-username"
+  mysql_password_secret_name = "mysql-password"
+
+  
+  # Backup Config
+  backup_retention_days = 7
+  geo_redundant_backup_enabled = false  # Stores backups in: Another Azure region
+
+
+  # Maintenance Window
+  maintenance_day = 7       # Day of week for planned maintenance (Azure patching, updates); maintenance_day = 7   # Sunday
+  maintenance_hour = 1    # Hour of day (UTC) when maintenance starts; # Example: # Range: 0–23; 1 = 01:00 UTC
+
+  /*
+  Restore / Create Mode
+  Defines how the MySQL server is created
+  Options:
+    Default              → brand new server (normal case)
+    PointInTimeRestore   → restore from backup at specific time
+    GeoRestore           → restore from geo-redundant backup
+    Replica              → create read replica
+
+  Source server ID (required for restore/replica scenarios)
+    Used when:
+    - Replica
+    - PointInTimeRestore
+    - GeoRestore
+    Example:
+      "/subscriptions/xxx/resourceGroups/rg/providers/Microsoft.DBforMySQL/flexibleServers/server1"
+  */
+
+  create_mode = "Default"   
+  source_server_id = null 
+
+  # Depends
+  depends_on = [module.key_vault]
 }

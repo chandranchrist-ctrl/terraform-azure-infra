@@ -1,25 +1,24 @@
-variable "prefix" {
+variable "env" {
   type = string
 }
 
 variable "resource_group_name" {
-  type = string
+  type        = string
+  description = "Name of the resource group to create"
 }
 
 variable "location" {
-  type = string
+  type        = string
+  description = "Azure region where the resource group will be created"
 }
 
 variable "tags" {
-  type    = map(string)
-  default = {}
-}
-
-variable "subnets_map" {
   type        = map(string)
-  description = "Map of subnet name → subnet ID"
+  description = "Tags to assign to the resource group"
+  default     = {}
 }
 
+# Variables for Firewall Public IP creation
 variable "allocation_method" {
   type        = string
   description = "Allocation method for public IP addresses"
@@ -32,6 +31,13 @@ variable "sku" {
   default     = "Standard"
 }
 
+variable "firewall_public_ip" {
+  type        = string
+  description = "Public IP of Firewall"
+  default     = null
+}
+
+#  Variables for Firewall configuration 
 variable "sku_name" {
   type        = string
   description = "Azure Firewall SKU name"
@@ -42,6 +48,11 @@ variable "sku_tier" {
   type        = string
   description = "Tier of Azure Firewall: Basic, Standard, Premium"
   default     = "Standard"
+}
+
+variable "subnets_map" {
+  type        = map(string)
+  description = "Map of subnet name → subnet ID"
 }
 
 variable "zones" {

@@ -1,85 +1,64 @@
 locals {
   backend_pools = [
     {
-      name = "lb-backend-pool-http"
+      name = "lb-backend-pool-nginx"
 
       lb_rules = [
         {
-          name          = "http-rule"
+          name          = "nginx-http-rule"
           protocol      = "Tcp"
           frontend_port = 80
           backend_port  = 80
-          probe_name    = "http-probe"
+          probe_name    = "nginx-http-probe"
+        },
+        {
+          name          = "nginx-https-rule"
+          protocol      = "Tcp"
+          frontend_port = 443
+          backend_port  = 443
+          probe_name    = "nginx-https-probe"
         }
       ]
 
       probes = [
         {
-          name                = "http-probe"
+          name                = "nginx-http-probe"
           protocol            = "Tcp"
           port                = 80
-          interval_in_seconds = 5 # interval_in_seconds → how often LB sends a probe
-          number_of_probes    = 2 # number_of_probes → number of consecutive failed probes before LB marks VM as unhealthy
-        }
-      ]
-
-      nat_pools = [
-        {
-          name                = "natpool-ssh"
+          interval_in_seconds = 5                   # interval_in_seconds → how often LB sends a probe
+          number_of_probes    = 2                   # number_of_probes → number of consecutive failed probes before LB marks VM as unhealthy
+        },
+                {
+          name                = "nginx-https-probe"
           protocol            = "Tcp"
-          frontend_port_start = 50000
-          frontend_port_end   = 50010
-          backend_port        = 22
+          port                = 443
+          interval_in_seconds = 5                   # interval_in_seconds → how often LB sends a probe
+          number_of_probes    = 2                   # number_of_probes → number of consecutive failed probes before LB marks VM as unhealthy
         }
       ]
 
+      # nat_pools = [
+      #   {
+      #     name                = "natpool-ssh"
+      #     protocol            = "Tcp"
+      #     frontend_port_start = 50000
+      #     frontend_port_end   = 50010
+      #     backend_port        = 22
+      #   }
+      # ]
+
+# NAT rules in Load Balancer are used to map specific frontend ports to backend VM ports, enabling direct inbound access (e.g., RDP/SSH) to individual VMs without assigning public IPs
       nat_rules = [
         {
-          name          = "natrule-rdp"
+          name          = "rdp-uat-biztalk-ap1"
           protocol      = "Tcp"
-          frontend_port = 3389
+          frontend_port = 5001
           backend_port  = 3389
-        }
-      ]
-    },
-    {
-      name = "lb-backend-pool-app"
-
-      lb_rules = [
+        },
         {
-          name          = "app-rule"
+          name          = "rdp-uat-biztalk-ap2"
           protocol      = "Tcp"
-          frontend_port = 8080
-          backend_port  = 8080
-          probe_name    = "app-probe"
-        }
-      ]
-
-      probes = [
-        {
-          name                = "app-probe"
-          protocol            = "Tcp"
-          port                = 8080
-          interval_in_seconds = 5
-          number_of_probes    = 2
-        }
-      ]
-
-      nat_pools = [
-        {
-          name                = "natpool-app-ssh"
-          protocol            = "Tcp"
-          frontend_port_start = 50100
-          frontend_port_end   = 50110
-          backend_port        = 22
-        }
-      ]
-
-      nat_rules = [
-        {
-          name          = "natrule-app-rdp"
-          protocol      = "Tcp"
-          frontend_port = 3390
+          frontend_port = 5002
           backend_port  = 3389
         }
       ]
