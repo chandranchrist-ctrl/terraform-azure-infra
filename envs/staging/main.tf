@@ -17,12 +17,12 @@ terraform {
 
 provider "azurerm" {
   features {}
-  subscription_id = "xxxx-xxxx-xxxx" # change manually when needed
+  subscription_id = "586aa0fa-aa29-4101-87bb-a12dbd42a348" # change manually when needed
 }
 
 locals {
   env = "uat"
-  workload = "biztalk"
+  workload = "hotel"
 }
 
 module "rg" {
@@ -296,110 +296,152 @@ module "appgw" {
   ]  
 }
 
-# module "windows_vm" {
-#   source = "../../modules/az-compute/windows_vm"
+module "windows_vm" {
+  source = "../../modules/az-compute/windows_vm"
 
-#   resource_group_name = module.rg.resource_group_name
-#   location            = module.rg.resource_group_location
-#   tags                = module.rg.tags
+  env = local.env
+  workload = local.workload
 
-#   vm_name  = "${local.env}-biztalk-ap"
-#   vm_count = 2
+  resource_group_name = module.rg.resource_group_name
+  location            = module.rg.resource_group_location
+  tags                = module.rg.tags
 
-#   vm_size   = "Standard_B2s"
-#   image_sku = "2019-Datacenter"
+  vm_name  = "${local.env}-${local.workload}-ap"
+  vm_count = 2
 
-#   # 🔐 KEY VAULT INPUTS (NEW)
-#   key_vault_name = "your-kv-name" # change manually when needed; ensure this KV exists and has the necessary secrets for admin username and password
-#   key_vault_rg   = module.rg.resource_group_name
-#   key_vault_id   = module.key_vault.key_vault_id
+  vm_size   = "Standard_B2s"
+  image_sku = "2019-Datacenter"
 
-#   admin_username_secret_name = "admin-username-secret"
-#   admin_password_secret_name = "admin-password-secret"
+  # 🔐 KEY VAULT INPUTS (NEW)
+  key_vault_id = module.key_vault.key_vault_id                   # change manually when needed; ensure this KV exists and has the necessary secrets for admin username and password
+  localadmin_credentials_secret_name = "localadmin-credentials"
 
-#   subnet_id = module.virtual_network.subnets["spoke"]["app"]
+  subnet_id = module.virtual_network.subnets["spoke"]["app"]
 
-#   private_ip_allocation = "static"
+  private_ip_allocation = "static"
 
-#   os_disk_storage_type = "Standard_LRS"
+  enable_asg = false
 
-#   enable_availability_set = false
-#   availability_set_name   = "biztalk-avset"
+  enable_lb = false
 
-#   license_type = "Windows_Server" # Sample: "Windows_Server", "RHEL", "SLES", "Windows_Client"; adjust based on your image and licensing needs
+  # Scenario 2: Existing LB
+  # lb_name              = "existing-lb-name"
+  # lb_backend_pool_name = "backend-pool-name"
 
+  lb_backend_pool_id = module.loadbalancer.backend_pool_id
 
-#   zones = [] # Sample: ["1", "2", "3"] 
+  os_disk_storage_type = "Standard_LRS"
+  os_disk_size_gb      = 127
 
+  enable_availability_set = false
+  availability_set_name   = "biztalk-avset"
 
-#   enable_public_ip = false
+  license_type = "Windows_Server" # Sample: "Windows_Server", "RHEL", "SLES", "Windows_Client"; adjust based on your image and licensing needs
 
-#   enable_boot_diagnostics               = true
-#   boot_diagnostics_mode                 = "create" # "none", "existing", or "create"
-#   boot_diagnostics_storage_account_name = "uatbiztalkdiag"
-
-#   data_disks = [
-#     {
-#       size_gb      = 128
-#       lun          = 0
-#       caching      = "ReadWrite"
-#       storage_type = "Standard_LRS"
-#     }
-#   ]
-# }
-
-# module "linux_vm" {
-#   source = "../../modules/az-compute/linux_vm"
-
-#   resource_group_name = module.rg.resource_group_name
-#   location            = module.rg.resource_group_location
-#   tags                = module.rg.tags
-
-#   vm_name  = "${local.env}-nginx-lnx"
-#   vm_count = 1
-#   vm_size  = "Standard_B2s"
-
-#   image_sku = "24_04-lts"
-
-#   subnet_id = module.virtual_network.subnets["spoke"]["web"]
-
-#   private_ip_allocation = "static"
-
-#   os_disk_storage_type = "Standard_LRS"
-
-#   enable_public_ip = false
-
-#   enable_availability_set = false
-
-#   availability_set_name = "biztalk-avset"
-
-#   zones = [] # Sample: ["1", "2", "3"] 
-
-#   enable_boot_diagnostics               = true
-#   boot_diagnostics_mode                 = "create" # "none", "existing", or "create"
-#   boot_diagnostics_storage_account_name = "uatbiztalkdiag"
-
-#   # 🔐 KEY VAULT INPUTS (NEW)
-#   key_vault_name = "your-kv-name" # change manually when needed; ensure this KV exists and has the necessary secrets for admin username and password
-#   key_vault_rg   = module.rg.resource_group_name
-#   key_vault_id   = module.key_vault.key_vault_id
-
-#   auth_mode = "ssh" # "password" or "ssh"
+  zones = [] # Sample: ["1", "2", "3"] 
 
 
-#   admin_username_secret_name = "admin-username-secret"
-#   admin_password_secret_name = "admin-password-secret"
-#   ssh_public_key_secret_name = "linux-ssh-public-key"
+  enable_public_ip = false
 
-#   #   data_disks = [
-#   #   {
-#   #     # size_gb = 128
-#   #     # lun     = 0
-#   #     # caching = "ReadWrite"
-#   #     # storage_type = "Standard_LRS"
-#   #   }
-#   # ]
-# }
+  enable_boot_diagnostics               = true
+  boot_diagnostics_mode                 = "create" # "none", "existing", or "create"
+  boot_diagnostics_storage_account_name = module.storage_account.storage_account_name          # "uatbiztalkdiag"
+
+  data_disks = [
+    {
+      size_gb      = 127
+      lun          = 0
+      caching      = "ReadWrite"
+      storage_type = "Standard_LRS"
+    }
+  ]
+
+  # Backup
+  enable_backup = false
+
+  # Recovery Serivce Vault Configuration
+  recovery_services_vault_name = "existing-rsv"
+  backup_policy_vm  = "existing-policy"
+
+  # Depends
+  depends_on = [module.key_vault]
+}
+
+module "linux_vm" {
+  source = "../../modules/az-compute/linux_vm"
+
+  env = local.env
+  workload = local.workload
+
+  vm_name  = "${local.env}-nginx-lnx"
+
+  resource_group_name = module.rg.resource_group_name
+  location            = module.rg.resource_group_location
+  tags                = module.rg.tags
+
+
+  vm_count = 1
+  vm_size  = "Standard_B2s"
+
+  image_sku = "24_04-lts"
+
+  subnet_id = module.virtual_network.subnets["spoke"]["web"]
+
+  private_ip_allocation = "static"
+
+  os_disk_storage_type = "Standard_LRS"
+  os_disk_size_gb      = 127
+
+  enable_public_ip = false
+
+  enable_availability_set = false
+
+  availability_set_name = "biztalk-avset"
+
+  zones = [] # Sample: ["1", "2", "3"] 
+
+  enable_boot_diagnostics               = true
+  boot_diagnostics_mode                 = "create" # "none", "existing", or "create"
+  boot_diagnostics_storage_account_name =  module.storage_account.storage_account_name          # "uatbiztalkdiag"
+
+  # 🔐 KEY VAULT INPUTS (NEW)
+  key_vault_id = module.key_vault.key_vault_id # change manually when needed; ensure this KV exists and has the necessary secrets for admin username and password
+
+  auth_mode = "ssh" # "password" or "ssh"
+
+  localadmin_credentials_secret_name = "localadmin-credentials"
+
+  ssh_public_key_secret_name = "linux-ssh-public-key"
+
+  enable_asg = false
+
+  enable_lb = false
+
+  # Scenario 2: Existing LB
+  # lb_name              = "existing-lb-name"
+  # lb_backend_pool_name = "backend-pool-name"
+
+  lb_backend_pool_id = module.loadbalancer.backend_pool_id
+
+  #   data_disks = [
+  #   {
+  #     # size_gb = 128
+  #     # lun     = 0
+  #     # caching = "ReadWrite"
+  #     # storage_type = "Standard_LRS"
+  #   }
+  # ]
+
+    # Backup
+  enable_backup = false
+
+  # Recovery Serivce Vault Configuration
+  recovery_services_vault_name = "existing-rsv"
+  backup_policy_vm  = "existing-policy"
+
+    # Depends
+  depends_on = [module.key_vault]
+}
 
 module "key_vault" {
   source = "../../modules/az-keyvault"
@@ -419,7 +461,7 @@ module "key_vault" {
   enabled_for_template_deployment = true
 
   public_network_access_enabled = true
-  network_acls_default_action   = "Allow" # Deny by default, then allow specific IPs or subnets below
+  network_acls_default_action   = "Deny" # Deny by default, then allow specific IPs or subnets below
 
   allowed_ip_ranges = ["49.37.215.245/32"] # Example: allow only specific IPs; adjust as needed
 
@@ -434,11 +476,16 @@ module "key_vault" {
 
   ssh_public_key = file("${path.module}/ssh/id_rsa.pub")
 
-  secrets = {
-  admin-username = "HBAdmin",
-  admin-password = "Qwerty123!"
-  mysql-username = "sqladmin"
-  mysql-password = "SQLP@ssword!23!"
+secrets = {
+  localadmin-credentials = jsonencode({
+    admin-username = "HBAdmin",
+    admin-password = "Qwerty123!",
+  })
+
+  mysql-credentials = jsonencode({
+    username = "sqladmin"
+    password = "SQLP@ssword!23!"
+  })
 }
 
   certificates = [
@@ -450,42 +497,42 @@ module "key_vault" {
   ]
 
   # Diagnostics Settings Inputs
-  audit_storage_account_name = "kvlogstorage"
-  audit_storage_account_rg   = "rg-logging"
+  audit_storage_account_name = module.storage_account.storage_account_name          # Ex. "kvlogstorage" to declare the name directly
+  audit_storage_account_rg   = module.rg.resource_group_name
 
 }
 
-# module "storage_account" {
-#   source = "../../modules/az-storage"
+module "storage_account" {
+  source = "../../modules/az-storage"
 
-#   storage_account_name = "${local.env}-storageacc"
+  storage_account_name = "${local.env}storageaccdiag"
 
-#   location            = module.rg.resource_group_location
-#   resource_group_name = module.rg.resource_group_name
-#   tags                = module.rg.tags
+  location            = module.rg.resource_group_location
+  resource_group_name = module.rg.resource_group_name
+  tags                = module.rg.tags
 
-#   account_kind          = "StorageV2" # StorageV2, Storage, BlobStorage, FileStorage, BlockBlobStorage
-#   account_tier          = "Standard"  # Standard or Premium
-#   replication_type      = "LRS"       # LRS, GRS, RAGRS, ZRS, GZRS, RAGZRS
-#   dns_endpoint_type     = "Standard"  # Standard or MicrosoftEndpointsOnly
-#   public_network_access = false       # disable public endpoint for enhanced security; access will be via private endpoint or service endpoints from allowed subnets
+  account_kind          = "StorageV2" # StorageV2, Storage, BlobStorage, FileStorage, BlockBlobStorage
+  account_tier          = "Standard"  # Standard or Premium
+  replication_type      = "LRS"       # LRS, GRS, RAGRS, ZRS, GZRS, RAGZRS
+  dns_endpoint_type     = "Standard"  # Standard or MicrosoftEndpointsOnly
+  public_network_access = false       # disable public endpoint for enhanced security; access will be via private endpoint or service endpoints from allowed subnets
 
-#   # retention / governance
-#   blob_versioning_enabled         = false # enable blob versioning for data protection and recovery
-#   blob_delete_retention_days      = 1     # enable soft delete for blobs with a retention period of 1 day; adjust as needed
-#   container_delete_retention_days = 1     # enable soft delete for containers with a retention period of 1 day; adjust as needed
+  # retention / governance
+  blob_versioning_enabled         = false # enable blob versioning for data protection and recovery
+  blob_delete_retention_days      = 1     # enable soft delete for blobs with a retention period of 1 day; adjust as needed
+  container_delete_retention_days = 1     # enable soft delete for containers with a retention period of 1 day; adjust as needed
 
-#   # immutability
-#   # immutability_period_days = 1
+  # immutability
+  # immutability_period_days = 1
 
-#   # network rules
-#   allowed_subnet_ids = [
-#     module.virtual_network.subnets["spoke"]["web"],
-#     module.virtual_network.subnets["spoke"]["app"],
-#     module.virtual_network.subnets["spoke"]["db"]
-#   ]
-#   allowed_ip_rules = ["49.37.215.245/32"] # adjust in real lab
-# }
+  # network rules
+  allowed_subnet_ids = [
+    module.virtual_network.subnets["spoke"]["web"],
+    module.virtual_network.subnets["spoke"]["app"],
+    module.virtual_network.subnets["spoke"]["db"]
+  ]
+  allowed_ip_rules = ["49.37.215.245/32"] # adjust in real lab
+}
 
 module "bastion" {
   source = "../../modules/az-bastion"
@@ -547,7 +594,7 @@ module "mysql" {
   zone = null
 
   # DB Server to be deployed as public or private 
-  enable_private_network = true
+  enable_private_network = false
   enable_private_dns = false
 
   vnet_id = module.virtual_network.vnets["spoke"].id
@@ -568,8 +615,7 @@ module "mysql" {
 
   # Key Vault Configuration
   key_vault_id = module.key_vault.key_vault_id
-  mysql_username_secret_name = "mysql-username"
-  mysql_password_secret_name = "mysql-password"
+  mysql_credentials_secret_name = "mysql-credentials"
 
   
   # Backup Config
@@ -580,6 +626,9 @@ module "mysql" {
   # Maintenance Window
   maintenance_day = 7       # Day of week for planned maintenance (Azure patching, updates); maintenance_day = 7   # Sunday
   maintenance_hour = 1    # Hour of day (UTC) when maintenance starts; # Example: # Range: 0–23; 1 = 01:00 UTC
+
+  enable_diagnostics = true
+  diagnostic_storage_account_id = module.storage_account.storage_account_id
 
   /*
   Restore / Create Mode

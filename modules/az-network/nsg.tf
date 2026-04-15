@@ -37,27 +37,7 @@ resource "azurerm_subnet_network_security_group_association" "nsg_assoc" {
 }
 
 ############################################
-# 4. CREATE ASG PER WORKLOAD SUBNET
-############################################
-
-locals {
-  asg_map = {
-    for k, v in local.workload_subnets :
-    v.subnet_key => v
-  }
-}
-
-resource "azurerm_application_security_group" "asg" {
-  for_each = local.asg_map
-
-  name = "${var.env}-${var.workload}-${each.key}-asg"
-
-  location            = var.location
-  resource_group_name = var.resource_group_name
-}
-
-############################################
-# 5. FLATTEN NSG RULES
+# 4. FLATTEN NSG RULES
 ############################################
 
 locals {
@@ -73,7 +53,7 @@ locals {
 }
 
 ############################################
-# 6. NSG RULES
+# 5. NSG RULES
 ############################################
 
 resource "azurerm_network_security_rule" "nsg_rule" {
@@ -99,18 +79,20 @@ resource "azurerm_network_security_rule" "nsg_rule" {
   ########################################
 source_application_security_group_ids = (
   try(each.value.rule.source_asg, null) != null && each.value.rule.source_asg != ""
-  ? [azurerm_application_security_group.asg[each.value.rule.source_asg].id]
+  && contains(keys(var.asg_map), each.value.rule.source_asg)
+  ? [var.asg_map[each.value.rule.source_asg]]
   : null
 )
 
   ########################################
   # ASG SUPPORT (DESTINATION)
   ########################################
-  destination_application_security_group_ids = (
-    try(each.value.rule.dest_asg, null) != null
-    ? [azurerm_application_security_group.asg[each.value.rule.dest_asg].id]
-    : null
-  )
+destination_application_security_group_ids = (
+  try(each.value.rule.dest_asg, null) != null && each.value.rule.dest_asg != ""
+  && contains(keys(var.asg_map), each.value.rule.dest_asg)
+  ? [var.asg_map[each.value.rule.dest_asg]]
+  : null
+)
 
   ########################################
   # META

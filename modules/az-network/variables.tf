@@ -34,3 +34,8 @@ variable "subnet_address_space" {
     tags = optional(map(string), {})
   })))
 }
+
+variable "asg_map" {
+  type = map(string)
+  default = {}
+}

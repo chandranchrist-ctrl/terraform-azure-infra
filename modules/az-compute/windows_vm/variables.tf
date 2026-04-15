@@ -1,6 +1,30 @@
-variable "location" {}
-variable "resource_group_name" {}
+variable "env" {
+  description = "Prefix for route table names"
+  type        = string
+}
 
+variable "workload" {
+  type = string
+}
+
+variable "resource_group_name" {
+  description = "Resource group name"
+  type        = string
+}
+
+variable "location" {
+  description = "Azure region"
+  type        = string
+}
+
+variable "tags" {
+  description = "Tags for resources"
+  type        = map(string)
+  default     = {}
+}
+
+
+#VM Configuration Variables
 variable "vm_name" {
   description = "Name for the VM"
 }
@@ -27,26 +51,36 @@ variable "private_ip_allocation" {
   type = string
 }
 
-variable "tags" {
-  type = map(string)
+variable "enable_public_ip" {
+  type = bool
 }
 
-variable "os_disk_storage_type" {}
+variable "enable_lb" {
+  type    = bool
+  default = false
+}
 
-variable "image_sku" {}
-
-variable "license_type" {
+variable "lb_backend_pool_id" {
   type    = string
   default = null
 }
 
-variable "zones" {
-  type    = list(string)
-  default = []
+variable "lb_name" {
+  type    = string
+  default = null
 }
 
-variable "enable_public_ip" {
-  type = bool
+variable "lb_backend_pool_name" {
+  type    = string
+  default = null
+}
+
+variable "image_sku" {}
+
+variable "os_disk_storage_type" {}
+
+variable "os_disk_size_gb" {
+    type = number
 }
 
 variable "data_disks" {
@@ -59,19 +93,17 @@ variable "data_disks" {
   default = []
 }
 
-variable "key_vault_name" {
-  type = string
+variable "license_type" {
+  type    = string
+  default = null
 }
 
-variable "key_vault_rg" {
-  type = string
+variable "zones" {
+  type    = list(string)
+  default = []
 }
 
-variable "admin_username_secret_name" {
-  type = string
-}
-
-variable "admin_password_secret_name" {
+variable "localadmin_credentials_secret_name" {
   type = string
 }
 
@@ -106,4 +138,27 @@ variable "boot_diagnostics_mode" {
 
 variable "key_vault_id" {
   type = string
+}
+
+variable "enable_backup" {
+  type    = bool
+  default = false
+}
+
+variable "recovery_services_vault_name" {
+  type = string
+}
+
+variable "backup_policy_vm" {
+  type = string
+}
+
+variable "enable_asg" {
+  type    = bool
+  default = false
+}
+
+variable "lb_attach_map" {
+  type    = map(string)
+  default = {}
 }

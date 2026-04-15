@@ -1,6 +1,27 @@
-variable "location" {}
+variable "env" {
+  description = "Prefix for route table names"
+  type        = string
+}
 
-variable "resource_group_name" {}
+variable "workload" {
+  type = string
+}
+
+variable "resource_group_name" {
+  description = "Resource group name"
+  type        = string
+}
+
+variable "location" {
+  description = "Azure region"
+  type        = string
+}
+
+variable "tags" {
+  description = "Tags for resources"
+  type        = map(string)
+  default     = {}
+}
 
 variable "vm_name" {
   description = "Name for the VM"
@@ -24,11 +45,11 @@ variable "private_ip_allocation" {
   type = string
 }
 
-variable "tags" {
-  type = map(string)
-}
-
 variable "os_disk_storage_type" {}
+
+variable "os_disk_size_gb" {
+    type = number
+}
 
 variable "image_sku" {}
 
@@ -51,25 +72,7 @@ variable "data_disks" {
   default = []
 }
 
-variable "key_vault_name" {
-  type = string
-}
 
-variable "key_vault_rg" {
-  type = string
-}
-
-variable "admin_username_secret_name" {
-  type = string
-}
-
-variable "admin_password_secret_name" {
-  type = string
-}
-
-variable "ssh_public_key_secret_name" {
-  type = string
-}
 
 variable "availability_set_name" {
   type = string
@@ -80,10 +83,7 @@ variable "enable_availability_set" {
   default = true
 }
 
-variable "enable_boot_diagnostics" {
-  type    = bool
-  default = false
-}
+
 
 variable "auth_mode" {
   type = string
@@ -92,6 +92,11 @@ variable "auth_mode" {
     condition     = contains(["ssh", "password"], var.auth_mode)
     error_message = "auth_mode must be 'ssh' or 'password'"
   }
+}
+
+variable "enable_boot_diagnostics" {
+  type    = bool
+  default = false
 }
 
 variable "boot_diagnostics_storage_account_name" {
@@ -109,7 +114,68 @@ variable "boot_diagnostics_mode" {
   }
 }
 
+# variable "key_vault_name" {
+#   type = string
+# }
+
+
 variable "key_vault_id" {
-  type        = string
-  description = "The resource ID of the Key Vault containing the SSL certificate for Application Gateway SSL termination"
+  type = string
+}
+
+variable "enable_backup" {
+  type    = bool
+  default = false
+}
+
+variable "recovery_services_vault_name" {
+  type = string
+}
+
+variable "backup_policy_vm" {
+  type = string
+}
+
+variable "enable_asg" {
+  type    = bool
+  default = false
+}
+
+
+
+# variable "key_vault_rg" {
+#   type = string
+# }
+
+variable "localadmin_credentials_secret_name" {
+  type = string
+}
+
+variable "ssh_public_key_secret_name" {
+  type = string
+}
+
+variable "enable_lb" {
+  type    = bool
+  default = false
+}
+
+variable "lb_backend_pool_id" {
+  type    = string
+  default = null
+}
+
+variable "lb_name" {
+  type    = string
+  default = null
+}
+
+variable "lb_backend_pool_name" {
+  type    = string
+  default = null
+}
+
+variable "lb_attach_map" {
+  type    = map(string)
+  default = {}
 }

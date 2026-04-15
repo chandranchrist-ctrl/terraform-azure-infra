@@ -1,5 +1,5 @@
 # ------------------------------------------------------------
-# Azure Monitor Agent (AMA) installation on Windows VM
+# Azure Monitor Agent (AMA) installation on Linux VM
 # ------------------------------------------------------------
 # PURPOSE:
 # - Installs monitoring agent inside the VM

@@ -44,11 +44,7 @@ variable "delegated_subnet_id" {
 #   type = string
 # }
 
-variable "mysql_username_secret_name" {
-  type    = string
-}
-
-variable "mysql_password_secret_name" {
+variable "mysql_credentials_secret_name" {
   type    = string
 }
 
@@ -136,4 +132,14 @@ variable "server_configurations" {
     value = string
   }))
   default = {}
+}
+
+variable "enable_diagnostics" {
+  type    = bool
+  default = false
+}
+
+variable "diagnostic_storage_account_id" {
+  type    = string
+  default = null
 }

@@ -6,8 +6,20 @@ output "frontend_ip_name" {
   value = "${var.lb_name}-fe"
 }
 
-output "backend_pool_ids" {
-  value = { for k, v in azurerm_lb_backend_address_pool.backend_pools : k => v.id }
+output "lb_name" {
+  value = azurerm_lb.lb.name
+}
+
+output "backend_pool_names" {
+  value = { for k, v in azurerm_lb_backend_address_pool.backend_pools : k => v.name }
+}
+
+# output "backend_pool_ids" {
+#   value = { for k, v in azurerm_lb_backend_address_pool.backend_pools : k => v.id }
+# }
+
+output "backend_pool_id" {
+  value = values(azurerm_lb_backend_address_pool.backend_pools)[0].id
 }
 
 output "public_ip_address" {

@@ -16,6 +16,34 @@ resource "azurerm_network_interface" "nic" {
   tags = var.tags
 }
 
+resource "azurerm_application_security_group" "asg" {
+  for_each = var.enable_asg ? toset(local.vm_names) : toset([])
+
+  name                = "${each.key}-asg"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+
+  tags = var.tags
+}
+
+resource "azurerm_network_interface_application_security_group_association" "asg_attach" {
+  for_each = var.enable_asg ? azurerm_network_interface.nic : {}
+
+  network_interface_id = each.value.id
+
+  application_security_group_id = azurerm_application_security_group.asg[each.key].id
+}
+
+resource "azurerm_network_interface_backend_address_pool_association" "lb" {
+  for_each = var.enable_lb ? azurerm_network_interface.nic : {}
+
+  network_interface_id    = each.value.id
+  ip_configuration_name   = var.ip_config_name
+  backend_address_pool_id = var.lb_backend_pool_id
+}
+
+
+
 resource "azurerm_public_ip" "pip" {
   for_each = var.enable_public_ip ? toset(local.vm_names) : toset([])
 
@@ -90,14 +118,14 @@ resource "azurerm_linux_virtual_machine" "vm" {
 
   disable_password_authentication = local.use_ssh
 
-  admin_username = data.azurerm_key_vault_secret.admin_username.value
-  admin_password = local.use_password ? data.azurerm_key_vault_secret.admin_password[0].value : null
+  admin_username = local.localadmin_creds.username
+  admin_password = local.localadmin_creds.password
 
   dynamic "admin_ssh_key" {
     for_each = local.use_ssh ? [1] : []
 
     content {
-      username   = data.azurerm_key_vault_secret.admin_username.value
+      username   = local.localadmin_creds.username
       public_key = data.azurerm_key_vault_secret.ssh_public_key.value
     }
   }
@@ -110,6 +138,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
     name                 = "${each.key}-osdisk"
     caching              = "ReadWrite"
     storage_account_type = var.os_disk_storage_type
+    disk_size_gb         = var.os_disk_size_gb
   }
 
   source_image_reference {
@@ -168,4 +197,19 @@ resource "azurerm_virtual_machine_data_disk_attachment" "attach" {
 
   lun     = each.value.disk.lun
   caching = each.value.disk.caching
+
+    depends_on = [
+    azurerm_linux_virtual_machine.vm,
+    azurerm_managed_disk.data_disk
+  ]
+}
+
+resource "azurerm_backup_protected_vm" "vm_backup" {
+  for_each = var.enable_backup ? azurerm_linux_virtual_machine.vm : {}
+
+  resource_group_name = var.resource_group_name
+  
+  source_vm_id     = each.value.id
+  backup_policy_id = data.azurerm_backup_policy_vm.policy[0].id
+  recovery_vault_name = data.azurerm_recovery_services_vault.vault[0].name
 }

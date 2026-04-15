@@ -29,8 +29,8 @@ resource "azurerm_mysql_flexible_server" "mysql" {
   resource_group_name = var.resource_group_name
   location            = var.location
 
-  administrator_login    = data.azurerm_key_vault_secret.mysql_username.value
-  administrator_password = data.azurerm_key_vault_secret.mysql_password.value
+  administrator_login    = local.mysql_creds.username
+  administrator_password = local.mysql_creds.password
 
   sku_name   = var.sku_name
   version    = var.db_version
