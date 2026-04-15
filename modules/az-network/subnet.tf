@@ -15,7 +15,7 @@ locals {
 resource "azurerm_subnet" "subnet" {
   for_each = local.subnet_map
 
-    name = (
+  name = (
     can(regex("subnet$", lower(each.value.subnet_key)))
     ? each.value.subnet_key
     : "${var.env}-${each.value.vnet_key}-${each.value.subnet_key}-subnet"

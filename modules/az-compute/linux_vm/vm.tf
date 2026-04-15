@@ -198,7 +198,7 @@ resource "azurerm_virtual_machine_data_disk_attachment" "attach" {
   lun     = each.value.disk.lun
   caching = each.value.disk.caching
 
-    depends_on = [
+  depends_on = [
     azurerm_linux_virtual_machine.vm,
     azurerm_managed_disk.data_disk
   ]
@@ -208,8 +208,8 @@ resource "azurerm_backup_protected_vm" "vm_backup" {
   for_each = var.enable_backup ? azurerm_linux_virtual_machine.vm : {}
 
   resource_group_name = var.resource_group_name
-  
-  source_vm_id     = each.value.id
-  backup_policy_id = data.azurerm_backup_policy_vm.policy[0].id
+
+  source_vm_id        = each.value.id
+  backup_policy_id    = data.azurerm_backup_policy_vm.policy[0].id
   recovery_vault_name = data.azurerm_recovery_services_vault.vault[0].name
 }

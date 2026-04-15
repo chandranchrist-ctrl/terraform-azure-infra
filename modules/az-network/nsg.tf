@@ -71,28 +71,28 @@ resource "azurerm_network_security_rule" "nsg_rule" {
   ########################################
   # CIDR OR SERVICE TAG SUPPORT
   ########################################
-  source_address_prefixes     = try(each.value.rule.source_address_prefixes, null)
+  source_address_prefixes      = try(each.value.rule.source_address_prefixes, null)
   destination_address_prefixes = try(each.value.rule.destination_address_prefixes, null)
 
   ########################################
   # ASG SUPPORT (SOURCE)
   ########################################
-source_application_security_group_ids = (
-  try(each.value.rule.source_asg, null) != null && each.value.rule.source_asg != ""
-  && contains(keys(var.asg_map), each.value.rule.source_asg)
-  ? [var.asg_map[each.value.rule.source_asg]]
-  : null
-)
+  source_application_security_group_ids = (
+    try(each.value.rule.source_asg, null) != null && each.value.rule.source_asg != ""
+    && contains(keys(var.asg_map), each.value.rule.source_asg)
+    ? [var.asg_map[each.value.rule.source_asg]]
+    : null
+  )
 
   ########################################
   # ASG SUPPORT (DESTINATION)
   ########################################
-destination_application_security_group_ids = (
-  try(each.value.rule.dest_asg, null) != null && each.value.rule.dest_asg != ""
-  && contains(keys(var.asg_map), each.value.rule.dest_asg)
-  ? [var.asg_map[each.value.rule.dest_asg]]
-  : null
-)
+  destination_application_security_group_ids = (
+    try(each.value.rule.dest_asg, null) != null && each.value.rule.dest_asg != ""
+    && contains(keys(var.asg_map), each.value.rule.dest_asg)
+    ? [var.asg_map[each.value.rule.dest_asg]]
+    : null
+  )
 
   ########################################
   # META

@@ -16,10 +16,10 @@ resource "azurerm_lb" "lb" {
   sku                 = var.sku_name
 
   frontend_ip_configuration {
-    name                 = "${var.lb_name}-fe"
+    name = "${var.lb_name}-fe"
 
     # # Uses subnet ID only when Load Balancer is Private; otherwise null
-    subnet_id            = var.frontend_ip_type == "Private" ? var.subnet_id : null
+    subnet_id = var.frontend_ip_type == "Private" ? var.subnet_id : null
 
     # Uses Public IP for Public Load Balancer frontend configuration (if created)
     public_ip_address_id = var.frontend_ip_type == "Public" && length(azurerm_public_ip.lb_public_ip) > 0 ? azurerm_public_ip.lb_public_ip[0].id : null
@@ -28,7 +28,7 @@ resource "azurerm_lb" "lb" {
 
 # Backend Pools
 resource "azurerm_lb_backend_address_pool" "backend_pools" {
-  for_each = { for bp in local.backend_pools : bp.name => bp }    # Creates a map using backend pool name as key for each pool object
+  for_each        = { for bp in local.backend_pools : bp.name => bp } # Creates a map using backend pool name as key for each pool object
   name            = each.value.name
   loadbalancer_id = azurerm_lb.lb.id
 }
@@ -46,7 +46,7 @@ locals {
 resource "azurerm_lb_probe" "probes" {
 
   # for_each is used to iterate over maps, sets, or objects to create multiple instances of a resource or module
-  for_each = { for p in local.all_probes : p.name => p }         # Creates a map of probes using probe name as the key for unique resource creation per probe
+  for_each = { for p in local.all_probes : p.name => p } # Creates a map of probes using probe name as the key for unique resource creation per probe
 
   name                = each.value.name
   loadbalancer_id     = azurerm_lb.lb.id
@@ -125,9 +125,9 @@ resource "azurerm_lb_nat_rule" "nat_rules" {
 resource "azurerm_lb_outbound_rule" "out_rules" {
   for_each = { for o in local.outbound_rules : o.name => o }
 
-  name            = each.value.name
-  loadbalancer_id = azurerm_lb.lb.id
-  protocol        = each.value.protocol
+  name                     = each.value.name
+  loadbalancer_id          = azurerm_lb.lb.id
+  protocol                 = each.value.protocol
   allocated_outbound_ports = each.value.allocated_outbound_ports
   backend_address_pool_id  = values(azurerm_lb_backend_address_pool.backend_pools)[0].id
 

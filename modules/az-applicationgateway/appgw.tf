@@ -25,7 +25,7 @@ resource "azurerm_application_gateway" "appgw" {
   # Gateway IP Configuration
   gateway_ip_configuration {
     name      = "${var.env}-appgw-subnet" # Logical name for the gateway IP configuration
-    subnet_id = var.subnet_id                # Subnet ID where the Application Gateway will be deployed
+    subnet_id = var.subnet_id             # Subnet ID where the Application Gateway will be deployed
   }
 
   identity {

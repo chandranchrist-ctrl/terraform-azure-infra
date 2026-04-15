@@ -45,7 +45,7 @@ variable "delegated_subnet_id" {
 # }
 
 variable "mysql_credentials_secret_name" {
-  type    = string
+  type = string
 }
 
 variable "key_vault_id" {

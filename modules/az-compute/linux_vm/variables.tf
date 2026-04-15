@@ -48,7 +48,7 @@ variable "private_ip_allocation" {
 variable "os_disk_storage_type" {}
 
 variable "os_disk_size_gb" {
-    type = number
+  type = number
 }
 
 variable "image_sku" {}

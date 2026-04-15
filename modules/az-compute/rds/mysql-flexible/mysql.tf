@@ -1,6 +1,6 @@
 resource "azurerm_private_dns_zone" "mysql" {
-  count = var.enable_private_dns ? 1 : 0
-  name  = "privatelink.mysql.database.azure.com"
+  count               = var.enable_private_dns ? 1 : 0
+  name                = "privatelink.mysql.database.azure.com"
   resource_group_name = var.resource_group_name
 }
 
@@ -18,7 +18,7 @@ resource "azurerm_mysql_flexible_server_firewall_rule" "allow_ips" {
 
   name                = replace("${each.value}-allow", ".", "-")
   resource_group_name = var.resource_group_name
-  server_name        = azurerm_mysql_flexible_server.mysql.name
+  server_name         = azurerm_mysql_flexible_server.mysql.name
 
   start_ip_address = each.value
   end_ip_address   = each.value
@@ -32,8 +32,8 @@ resource "azurerm_mysql_flexible_server" "mysql" {
   administrator_login    = local.mysql_creds.username
   administrator_password = local.mysql_creds.password
 
-  sku_name   = var.sku_name
-  version    = var.db_version
+  sku_name = var.sku_name
+  version  = var.db_version
 
   backup_retention_days        = var.backup_retention_days
   geo_redundant_backup_enabled = var.geo_redundant_backup_enabled
@@ -43,7 +43,7 @@ resource "azurerm_mysql_flexible_server" "mysql" {
   delegated_subnet_id = var.enable_private_network ? var.delegated_subnet_id : null
 
   private_dns_zone_id = var.enable_private_dns ? azurerm_private_dns_zone.mysql[0].id : null
-  
+
   dynamic "high_availability" {
     for_each = var.enable_ha ? [1] : []
     content {
@@ -70,9 +70,9 @@ resource "azurerm_mysql_flexible_server" "mysql" {
 resource "azurerm_mysql_flexible_database" "db" {
   name                = var.db_name
   resource_group_name = var.resource_group_name
-  server_name        = azurerm_mysql_flexible_server.mysql.name
-  charset            = "utf8mb4"
-  collation          = "utf8mb4_unicode_ci"
+  server_name         = azurerm_mysql_flexible_server.mysql.name
+  charset             = "utf8mb4"
+  collation           = "utf8mb4_unicode_ci"
 }
 
 # Optional restore / replica logic
@@ -83,8 +83,8 @@ resource "azurerm_mysql_flexible_server" "replica" {
   resource_group_name = var.resource_group_name
   location            = var.replica_location
 
-  create_mode = var.create_mode
-  source_server_id  = var.source_server_id
+  create_mode      = var.create_mode
+  source_server_id = var.source_server_id
 
   sku_name = var.sku_name
 
@@ -96,8 +96,8 @@ resource "azurerm_mysql_flexible_server_configuration" "config" {
 
   name                = each.key
   resource_group_name = var.resource_group_name
-  server_name        = azurerm_mysql_flexible_server.mysql.name
-  value              = each.value.value
+  server_name         = azurerm_mysql_flexible_server.mysql.name
+  value               = each.value.value
 
   timeouts {
     create = "30m"

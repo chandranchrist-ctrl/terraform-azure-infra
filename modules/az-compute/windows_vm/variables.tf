@@ -80,7 +80,7 @@ variable "image_sku" {}
 variable "os_disk_storage_type" {}
 
 variable "os_disk_size_gb" {
-    type = number
+  type = number
 }
 
 variable "data_disks" {

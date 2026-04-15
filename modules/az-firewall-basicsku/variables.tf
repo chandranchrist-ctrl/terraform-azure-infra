@@ -39,7 +39,7 @@ variable "sku_name" {
 }
 
 variable "sku_tier" {
-  type    = string
+  type = string
 }
 
 variable "zones" {

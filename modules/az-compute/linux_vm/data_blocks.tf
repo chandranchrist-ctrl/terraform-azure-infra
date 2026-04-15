@@ -46,9 +46,9 @@ data "azurerm_lb" "existing" {
 }
 
 data "azurerm_lb_backend_address_pool" "existing" {
-  count            = var.enable_lb ? 1 : 0
-  name             = var.lb_backend_pool_name
-  loadbalancer_id  = data.azurerm_lb.existing[0].id
+  count           = var.enable_lb ? 1 : 0
+  name            = var.lb_backend_pool_name
+  loadbalancer_id = data.azurerm_lb.existing[0].id
 }
 
 locals {

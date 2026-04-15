@@ -75,7 +75,7 @@ variable "certificates" {
 # }
 
 variable "secrets" {
-  type      = map(string)
+  type = map(string)
 }
 
 variable "ssh_public_key" {

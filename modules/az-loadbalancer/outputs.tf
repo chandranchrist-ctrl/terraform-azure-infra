@@ -49,7 +49,7 @@ output "lb_rule_ids" {
 output "nat_rule_mapping" {
   value = {
     for k, v in azurerm_lb_nat_rule.nat_rules : k => {
-      backend_pool  = v.pool               # The backend pool name from locals merge
+      backend_pool  = v.pool # The backend pool name from locals merge
       vm_id         = v.backend_ip_configuration_id
       frontend_port = v.frontend_port
       backend_port  = v.backend_port

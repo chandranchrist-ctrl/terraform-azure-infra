@@ -36,6 +36,6 @@ variable "subnet_address_space" {
 }
 
 variable "asg_map" {
-  type = map(string)
+  type    = map(string)
   default = {}
 }

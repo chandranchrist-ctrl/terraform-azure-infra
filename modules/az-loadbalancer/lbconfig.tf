@@ -25,15 +25,15 @@ locals {
           name                = "nginx-http-probe"
           protocol            = "Tcp"
           port                = 80
-          interval_in_seconds = 5                   # interval_in_seconds → how often LB sends a probe
-          number_of_probes    = 2                   # number_of_probes → number of consecutive failed probes before LB marks VM as unhealthy
+          interval_in_seconds = 5 # interval_in_seconds → how often LB sends a probe
+          number_of_probes    = 2 # number_of_probes → number of consecutive failed probes before LB marks VM as unhealthy
         },
-                {
+        {
           name                = "nginx-https-probe"
           protocol            = "Tcp"
           port                = 443
-          interval_in_seconds = 5                   # interval_in_seconds → how often LB sends a probe
-          number_of_probes    = 2                   # number_of_probes → number of consecutive failed probes before LB marks VM as unhealthy
+          interval_in_seconds = 5 # interval_in_seconds → how often LB sends a probe
+          number_of_probes    = 2 # number_of_probes → number of consecutive failed probes before LB marks VM as unhealthy
         }
       ]
 
@@ -47,7 +47,7 @@ locals {
       #   }
       # ]
 
-# NAT rules in Load Balancer are used to map specific frontend ports to backend VM ports, enabling direct inbound access (e.g., RDP/SSH) to individual VMs without assigning public IPs
+      # NAT rules in Load Balancer are used to map specific frontend ports to backend VM ports, enabling direct inbound access (e.g., RDP/SSH) to individual VMs without assigning public IPs
       nat_rules = [
         {
           name          = "rdp-uat-biztalk-ap1"

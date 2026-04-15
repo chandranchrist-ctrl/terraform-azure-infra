@@ -34,7 +34,7 @@ locals {
         # }
       ]
     },
-   {
+    {
       name        = "spoke-app"
       subnet_keys = ["app"] # this points to subnets_map["db"]
       routes = [
@@ -45,9 +45,9 @@ locals {
         #   next_hop_ip_address = var.firewall_ip             
         # },
         {
-          name                = "internet-via-lb"
-          address_prefix      = "0.0.0.0/0"
-          next_hop_type       = "Internet"
+          name           = "internet-via-lb"
+          address_prefix = "0.0.0.0/0"
+          next_hop_type  = "Internet"
         }
       ]
     }

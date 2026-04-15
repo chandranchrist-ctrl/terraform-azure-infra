@@ -12,7 +12,7 @@ resource "azurerm_network_interface" "nic" {
 
     public_ip_address_id = var.enable_public_ip ? azurerm_public_ip.pip[each.key].id : null
   }
-  
+
 
   tags = var.tags
 }
@@ -188,8 +188,8 @@ resource "azurerm_backup_protected_vm" "vm_backup" {
   for_each = var.enable_backup ? azurerm_windows_virtual_machine.vm : {}
 
   resource_group_name = var.resource_group_name
-  
-  source_vm_id     = each.value.id
-  backup_policy_id = data.azurerm_backup_policy_vm.policy[0].id
+
+  source_vm_id        = each.value.id
+  backup_policy_id    = data.azurerm_backup_policy_vm.policy[0].id
   recovery_vault_name = data.azurerm_recovery_services_vault.vault[0].name
 }
