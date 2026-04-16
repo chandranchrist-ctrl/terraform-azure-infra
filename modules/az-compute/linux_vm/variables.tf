@@ -175,7 +175,3 @@ variable "lb_backend_pool_name" {
   default = null
 }
 
-variable "lb_attach_map" {
-  type    = map(string)
-  default = {}
-}

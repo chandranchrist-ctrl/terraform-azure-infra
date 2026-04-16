@@ -35,12 +35,27 @@ resource "azurerm_network_interface_application_security_group_association" "asg
   application_security_group_id = azurerm_application_security_group.asg[each.key].id
 }
 
+# resource "azurerm_network_interface_backend_address_pool_association" "lb" {
+#   for_each = local.lb_enabled ? azurerm_network_interface.nic : {}
+
+#   network_interface_id  = each.value.id
+#   ip_configuration_name = var.ip_config_name
+
+#   backend_address_pool_id = local.resolved_lb_backend_pool_id
+# }
+
+
 resource "azurerm_network_interface_backend_address_pool_association" "lb" {
   for_each = var.enable_lb ? azurerm_network_interface.nic : {}
 
-  network_interface_id    = each.value.id
-  ip_configuration_name   = var.ip_config_name
-  backend_address_pool_id = var.lb_backend_pool_id
+  network_interface_id  = each.value.id
+  ip_configuration_name = var.ip_config_name
+
+  backend_address_pool_id = (
+    var.lb_backend_pool_id != null
+    ? var.lb_backend_pool_id
+    : data.azurerm_lb_backend_address_pool.existing[0].id
+  )
 }
 
 resource "azurerm_public_ip" "pip" {
@@ -64,7 +79,7 @@ resource "azurerm_availability_set" "avset" {
   resource_group_name = var.resource_group_name
 
   platform_fault_domain_count  = 2
-  platform_update_domain_count = 5
+  platform_update_domain_count = 3
   managed                      = true
 
   tags = var.tags
@@ -95,6 +110,13 @@ locals {
     for i in range(var.vm_count) :
     format("%s%02d", var.vm_name, i + 1)
   ]
+
+  zones = var.zones != null ? var.zones : []
+
+  vm_zone_map = length(local.zones) > 0 ? {
+    for i, name in local.vm_names :
+    name => element(local.zones, i % length(local.zones))
+  } : {}
 }
 
 resource "azurerm_windows_virtual_machine" "vm" {
@@ -106,16 +128,37 @@ resource "azurerm_windows_virtual_machine" "vm" {
   resource_group_name = var.resource_group_name
   size                = var.vm_size
 
-  admin_username = local.localadmin_creds.username
-  admin_password = local.localadmin_creds.password
+  admin_username = local.localadmin_creds.admin-username
+  admin_password = local.localadmin_creds.admin-password
 
   network_interface_ids = [
     azurerm_network_interface.nic[each.key].id
   ]
 
-  availability_set_id = var.enable_availability_set && length(var.zones) == 0 ? azurerm_availability_set.avset[0].id : null
+    availability_set_id = (
+  var.enable_availability_set && length(local.zones) == 0
+  ? azurerm_availability_set.avset[0].id
+  : null
+)
 
-  zone         = length(var.zones) > 0 ? element(var.zones, index(local.vm_names, each.key) % length(var.zones)) : null
+
+  # zone         = length(var.zones) > 0 ? element(var.zones, index(local.vm_names, each.key) % length(var.zones)) : null
+  zone = length(local.zones) > 0 ? local.vm_zone_map[each.key] : null
+
+  os_disk {
+    name                 = "${each.key}-osdisk"
+    caching              = "ReadWrite"
+    storage_account_type = var.os_disk_storage_type
+    disk_size_gb         = var.os_disk_size_gb
+  }  
+
+   source_image_reference {
+    publisher = "MicrosoftWindowsServer"
+    offer     = "WindowsServer"
+    sku       = var.image_sku
+    version   = "latest"
+  } 
+
   license_type = var.license_type
 
   boot_diagnostics {
@@ -124,20 +167,6 @@ resource "azurerm_windows_virtual_machine" "vm" {
       ? data.azurerm_storage_account.diag[0].primary_blob_endpoint
       : azurerm_storage_account.diag[0].primary_blob_endpoint
     ) : null
-  }
-
-  os_disk {
-    name                 = "${each.key}-osdisk"
-    caching              = "ReadWrite"
-    storage_account_type = var.os_disk_storage_type
-    disk_size_gb         = var.os_disk_size_gb
-  }
-
-  source_image_reference {
-    publisher = "MicrosoftWindowsServer"
-    offer     = "WindowsServer"
-    sku       = var.image_sku
-    version   = "latest"
   }
 
   identity {
@@ -167,6 +196,8 @@ resource "azurerm_managed_disk" "data_disk" {
   storage_account_type = each.value.disk.storage_type
   create_option        = "Empty"
   disk_size_gb         = each.value.disk.size_gb
+
+  zone = length(local.zones) > 0 ? local.vm_zone_map[each.value.vm] : null
 }
 
 resource "azurerm_virtual_machine_data_disk_attachment" "attach" {

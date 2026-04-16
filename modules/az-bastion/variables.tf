@@ -19,10 +19,6 @@ variable "tags" {
   default     = {}
 }
 
-variable "use_firewall_public_ip" {
-  type = bool
-}
-
 variable "firewall_public_ip_id" {
   type = string
 }

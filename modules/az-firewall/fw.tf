@@ -1,5 +1,7 @@
 # Public IP for Firewall
 resource "azurerm_public_ip" "fwpip" {
+  count               = var.firewall_mode == "public" ? 1 : 0
+  
   name                = "${var.env}-fwpip"
   location            = var.location
   resource_group_name = var.resource_group_name
@@ -9,6 +11,8 @@ resource "azurerm_public_ip" "fwpip" {
 
 # Public IP for Management
 resource "azurerm_public_ip" "fwmgmtpip" {
+  count               = var.firewall_mode == "public" ? 1 : 0
+
   name                = "${var.env}-fwmgmtpip"
   location            = var.location
   resource_group_name = var.resource_group_name
@@ -18,15 +22,8 @@ resource "azurerm_public_ip" "fwmgmtpip" {
 
 # Pick subnets automatically
 locals {
-  subnet_firewall_id   = lookup(var.subnets_map, "AzureFirewallSubnet", null)
-  subnet_management_id = lookup(var.subnets_map, "AzureFirewallManagementSubnet", null)
-}
-
-# Validation - ensure required subnets exist
-locals {
-  valid_subnets = (
-    local.subnet_firewall_id != null && local.subnet_management_id != null
-  )
+  subnet_firewall_id   = var.firewall_subnet_id
+  subnet_management_id = var.firewall_management_subnet_id
 }
 
 # Azure Firewall
@@ -40,15 +37,17 @@ resource "azurerm_firewall" "fw" {
 
   firewall_policy_id = var.firewall_policy_id
 
-  ip_configuration {
-    name                 = "configuration"
-    subnet_id            = local.subnet_firewall_id
-    public_ip_address_id = azurerm_public_ip.fwpip.id
-  }
+  # Firewall IP Configuration
+ip_configuration {
+  name      = "configuration"
+  subnet_id = local.subnet_firewall_id
+
+  public_ip_address_id = var.firewall_mode == "public" ? azurerm_public_ip.fwpip[0].id : null
+}
 
   management_ip_configuration {
     name                 = "management"
     subnet_id            = local.subnet_management_id
-    public_ip_address_id = azurerm_public_ip.fwmgmtpip.id
+    public_ip_address_id = var.firewall_mode == "public" ? azurerm_public_ip.fwmgmtpip[0].id : null
   }
 }

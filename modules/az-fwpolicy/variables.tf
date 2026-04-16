@@ -21,7 +21,16 @@ variable "all_vm_cidrs" {
   description = "List of CIDRs for VM subnets / sources"
 }
 
+variable "enable_public_ip" {
+  type        = bool
+  description = "Enable Public IP for Azure Firewall (controls NAT rules)"
+  default     = true
+}
+
+variable "sku" {
+  type = string
+}
+
 variable "firewall_public_ip" {
-  type        = string
-  description = "Public IP used for NAT rules"
+  type = string
 }

@@ -10,6 +10,7 @@ locals {
           frontend_port = 80
           backend_port  = 80
           probe_name    = "nginx-http-probe"
+          disable_outbound_snat = true
         },
         {
           name          = "nginx-https-rule"
@@ -17,6 +18,7 @@ locals {
           frontend_port = 443
           backend_port  = 443
           probe_name    = "nginx-https-probe"
+          disable_outbound_snat = true
         }
       ]
 

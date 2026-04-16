@@ -54,26 +54,6 @@ variable "certificates" {
   }))
 }
 
-# variable "admin_username" {
-#   type      = string
-#   sensitive = true
-# }
-
-# variable "admin_password" {
-#   type      = string
-#   sensitive = true
-# }
-
-# variable "mysql-username-secret" {
-#   type      = string
-#   sensitive = true
-# }
-
-# variable "mysql-password-secret" {
-#   type      = string
-#   sensitive = true
-# }
-
 variable "secrets" {
   type = map(string)
 }
@@ -82,11 +62,11 @@ variable "ssh_public_key" {
   type = string
 }
 
+variable "ssh_secret_name" {
+  type    = string
+  default = "linux-ssh-public-key"
+}
 
-# variable "audit_storage_account_id" {
-#   type        = string
-#   description = "Existing storage account ID for Key Vault diagnostics"
-# }
 
 variable "public_network_access_enabled" {
   type        = bool

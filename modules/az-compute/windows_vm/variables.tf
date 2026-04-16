@@ -36,11 +36,6 @@ variable "vm_count" {
 
 variable "vm_size" {}
 
-# variable "admin_username" {}
-# variable "admin_password" {
-#   sensitive = true
-# }
-
 variable "subnet_id" {}
 
 variable "ip_config_name" {
@@ -51,36 +46,21 @@ variable "private_ip_allocation" {
   type = string
 }
 
-variable "enable_public_ip" {
-  type = bool
-}
-
-variable "enable_lb" {
-  type    = bool
-  default = false
-}
-
-variable "lb_backend_pool_id" {
-  type    = string
-  default = null
-}
-
-variable "lb_name" {
-  type    = string
-  default = null
-}
-
-variable "lb_backend_pool_name" {
-  type    = string
-  default = null
-}
-
-variable "image_sku" {}
-
 variable "os_disk_storage_type" {}
 
 variable "os_disk_size_gb" {
   type = number
+}
+
+variable "image_sku" {}
+
+variable "zones" {
+  type    = list(string)
+  default = []
+}
+
+variable "enable_public_ip" {
+  type = bool
 }
 
 variable "data_disks" {
@@ -91,20 +71,6 @@ variable "data_disks" {
     storage_type = string
   }))
   default = []
-}
-
-variable "license_type" {
-  type    = string
-  default = null
-}
-
-variable "zones" {
-  type    = list(string)
-  default = []
-}
-
-variable "localadmin_credentials_secret_name" {
-  type = string
 }
 
 variable "availability_set_name" {
@@ -157,6 +123,37 @@ variable "enable_asg" {
   type    = bool
   default = false
 }
+
+variable "localadmin_credentials_secret_name" {
+  type = string
+}
+
+variable "license_type" {
+  type    = string
+  default = null
+}
+
+
+variable "enable_lb" {
+  type    = bool
+  default = false
+}
+
+variable "lb_backend_pool_id" {
+  type    = string
+  default = null
+}
+
+variable "lb_name" {
+  type    = string
+  default = null
+}
+
+variable "lb_backend_pool_name" {
+  type    = string
+  default = null
+}
+
 
 variable "lb_attach_map" {
   type    = map(string)

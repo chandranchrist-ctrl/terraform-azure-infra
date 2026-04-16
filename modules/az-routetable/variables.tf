@@ -27,13 +27,12 @@ variable "create_rt" {
   default     = true
 }
 
-variable "subnets_map" {
-  description = "Map of subnets to attach route tables"
-  type        = map(object({ id = string }))
-}
-
 variable "firewall_ip" {
   description = "Optional firewall private IP for VirtualAppliance routes"
   type        = string
   default     = null
+}
+
+variable "subnets_map" {
+  type = map(string)
 }

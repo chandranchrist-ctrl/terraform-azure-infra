@@ -3,6 +3,7 @@ locals {
     for r in [
       {
         name                  = "Allow-DNS"
+        priority              = 200
         enabled               = true
         source_addresses      = var.all_vm_cidrs
         destination_addresses = ["*"]
@@ -11,6 +12,7 @@ locals {
       },
       {
         name                  = "Allow-Internet"
+        priority              = 201
         enabled               = true
         source_addresses      = var.all_vm_cidrs
         destination_addresses = ["0.0.0.0/0"]
@@ -24,6 +26,7 @@ locals {
     for r in [
       {
         name                  = "Block-Google-DNS"
+        priority              = 100
         enabled               = false
         source_addresses      = var.all_vm_cidrs
         destination_addresses = ["8.8.8.8"]
@@ -40,7 +43,7 @@ resource "azurerm_firewall_network_rule_collection" "allow" {
   name                = each.value.name
   azure_firewall_name = azurerm_firewall.fw.name
   resource_group_name = var.resource_group_name
-  priority            = 200
+  priority            = each.value.priority
   action              = "Allow"
 
   rule {
@@ -58,7 +61,7 @@ resource "azurerm_firewall_network_rule_collection" "deny" {
   name                = each.value.name
   azure_firewall_name = azurerm_firewall.fw.name
   resource_group_name = var.resource_group_name
-  priority            = 100
+  priority            = each.value.priority
   action              = "Deny"
 
   rule {

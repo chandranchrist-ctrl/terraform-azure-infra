@@ -26,11 +26,6 @@ variable "sku" {
   default = "Standard"
 }
 
-variable "firewall_public_ip" {
-  type        = string
-  description = "Public IP of Firewall"
-  default     = null
-}
 
 #  Variables for Firewall configuration 
 variable "sku_name" {
@@ -52,7 +47,21 @@ variable "all_vm_cidrs" {
   description = "List of VM CIDRs to use in rules"
 }
 
-variable "subnets_map" {
-  type        = map(string)
-  description = "Map of subnet name → subnet ID"
+variable "firewall_subnet_id" {
+  type = string
+}
+
+variable "firewall_management_subnet_id" {
+  type = string
+}
+
+variable "firewall_mode" {
+  type        = string
+  description = "public or private firewall mode"
+  default     = "public"
+
+  validation {
+    condition     = contains(["public", "private"], var.firewall_mode)
+    error_message = "firewall_mode must be either public or private"
+  }
 }

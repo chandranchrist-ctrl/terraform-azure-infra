@@ -22,6 +22,25 @@ output "subnets" {
   }
 }
 
+output "subnet_lookup" {
+  value = {
+    for k, v in azurerm_subnet.subnet :
+    local.subnet_map[k].subnet_key => v.id
+  }
+}
+
+# output "subnets_map" {
+#   value = {
+#     for k, v in azurerm_subnet.subnet :
+#     k => {
+#       id         = v.id
+#       vnet_key   = local.subnet_map[k].vnet_key
+#       subnet_key = local.subnet_map[k].subnet_key
+#       type       = try(local.subnet_map[k].tags.type, "infra")
+#     }
+#   }
+# }
+
 # NSGs
 output "nsgs" {
   value = {
@@ -32,3 +51,4 @@ output "nsgs" {
     }
   }
 }
+

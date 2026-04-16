@@ -7,5 +7,5 @@ output "bastion_fqdn" {
 }
 
 output "public_ip_id" {
-  value = local.public_ip_id
+  value = azurerm_public_ip.bastion_pip.id
 }

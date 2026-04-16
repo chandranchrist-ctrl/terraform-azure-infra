@@ -31,12 +31,6 @@ variable "sku" {
   default     = "Standard"
 }
 
-variable "firewall_public_ip" {
-  type        = string
-  description = "Public IP of Firewall"
-  default     = null
-}
-
 #  Variables for Firewall configuration 
 variable "sku_name" {
   type        = string
@@ -50,19 +44,33 @@ variable "sku_tier" {
   default     = "Standard"
 }
 
-variable "subnets_map" {
-  type        = map(string)
-  description = "Map of subnet name → subnet ID"
-}
-
 variable "zones" {
   type        = list(string)
   description = "Optional list of zones for Azure Firewall"
   default     = []
 }
 
+variable "firewall_subnet_id" {
+  type = string
+}
+
+variable "firewall_management_subnet_id" {
+  type = string
+}
+
 variable "firewall_policy_id" {
   type        = string
   default     = null
   description = "Firewall Policy ID (required for Standard/Premium)"
+}
+
+variable "firewall_mode" {
+  type        = string
+  description = "public or private firewall mode"
+  default     = "public"
+
+  validation {
+    condition     = contains(["public", "private"], var.firewall_mode)
+    error_message = "firewall_mode must be either public or private"
+  }
 }

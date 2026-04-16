@@ -10,7 +10,7 @@ resource "azurerm_network_interface" "nic" {
     subnet_id                     = var.subnet_id
     private_ip_address_allocation = var.private_ip_allocation
 
-    public_ip_address_id = var.enable_public_ip ? azurerm_public_ip.pip[each.key].id : null
+      public_ip_address_id = var.enable_public_ip ? azurerm_public_ip.pip[each.key].id : null
   }
 
   tags = var.tags
@@ -37,12 +37,15 @@ resource "azurerm_network_interface_application_security_group_association" "asg
 resource "azurerm_network_interface_backend_address_pool_association" "lb" {
   for_each = var.enable_lb ? azurerm_network_interface.nic : {}
 
-  network_interface_id    = each.value.id
-  ip_configuration_name   = var.ip_config_name
-  backend_address_pool_id = var.lb_backend_pool_id
+  network_interface_id  = each.value.id
+  ip_configuration_name = var.ip_config_name
+
+  backend_address_pool_id = (
+    var.lb_backend_pool_id != null
+    ? var.lb_backend_pool_id
+    : data.azurerm_lb_backend_address_pool.existing[0].id
+  )
 }
-
-
 
 resource "azurerm_public_ip" "pip" {
   for_each = var.enable_public_ip ? toset(local.vm_names) : toset([])
@@ -55,7 +58,7 @@ resource "azurerm_public_ip" "pip" {
   sku               = "Standard"
 
   tags = var.tags
-}
+  }
 
 resource "azurerm_availability_set" "avset" {
   count = var.enable_availability_set ? 1 : 0
@@ -65,7 +68,7 @@ resource "azurerm_availability_set" "avset" {
   resource_group_name = var.resource_group_name
 
   platform_fault_domain_count  = 2
-  platform_update_domain_count = 5
+  platform_update_domain_count = 3
   managed                      = true
 
   tags = var.tags
@@ -91,14 +94,27 @@ resource "azurerm_storage_account" "diag" {
   account_replication_type = "LRS"
 }
 
+# locals {
+#   vm_zone_map = {
+#     for i, name in local.vm_names :
+#     name => element(var.zones, i % length(var.zones))
+#   }
+# }
+
 locals {
   vm_names = [
     for i in range(var.vm_count) :
     format("%s%02d", var.vm_name, i + 1)
   ]
-}
 
-locals {
+  zones = var.zones != null ? var.zones : []
+
+  vm_zone_map = length(local.zones) > 0 ? {
+    for i, name in local.vm_names :
+    name => element(local.zones, i % length(local.zones))
+  } : {}
+
+
   use_ssh      = var.auth_mode == "ssh"
   use_password = var.auth_mode == "password"
 }
@@ -118,21 +134,29 @@ resource "azurerm_linux_virtual_machine" "vm" {
 
   disable_password_authentication = local.use_ssh
 
-  admin_username = local.localadmin_creds.username
-  admin_password = local.localadmin_creds.password
+  admin_username = local.localadmin_creds.admin-username
+  admin_password = local.localadmin_creds.admin-password
 
   dynamic "admin_ssh_key" {
     for_each = local.use_ssh ? [1] : []
 
     content {
-      username   = local.localadmin_creds.username
+      username   = local.localadmin_creds.admin-username
       public_key = data.azurerm_key_vault_secret.ssh_public_key.value
     }
   }
 
-  availability_set_id = var.enable_availability_set && length(var.zones) == 0 ? azurerm_availability_set.avset[0].id : null
+  # availability_set_id = var.enable_availability_set && length(var.zones) == 0 ? azurerm_availability_set.avset[0].id : null
 
-  zone = length(var.zones) > 0 ? element(var.zones, index(local.vm_names, each.key) % length(var.zones)) : null
+  availability_set_id = (
+  var.enable_availability_set && length(local.zones) == 0
+  ? azurerm_availability_set.avset[0].id
+  : null
+)
+
+  # zone = length(var.zones) > 0 ? element(var.zones, index(local.vm_names, each.key) % length(var.zones)) : null
+  # zone = length(var.zones) > 0 ? local.vm_zone_map[each.key] : null
+  zone = length(local.zones) > 0 ? local.vm_zone_map[each.key] : null
 
   os_disk {
     name                 = "${each.key}-osdisk"
@@ -143,7 +167,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
 
   source_image_reference {
     publisher = "Canonical"
-    offer     = "0001-com-ubuntu-server-jammy"
+    offer     = "UbuntuServer"
     sku       = var.image_sku
     version   = "latest"
   }
@@ -187,6 +211,9 @@ resource "azurerm_managed_disk" "data_disk" {
   storage_account_type = each.value.disk.storage_type
   create_option        = "Empty"
   disk_size_gb         = each.value.disk.size_gb
+
+  # zone = length(var.zones) > 0 ? local.vm_zone_map[each.value.vm] : null
+  zone = length(local.zones) > 0 ? local.vm_zone_map[each.value.vm] : null
 }
 
 resource "azurerm_virtual_machine_data_disk_attachment" "attach" {

@@ -38,7 +38,7 @@ locals {
     for rt in local.route_definitions : [
       for sk in rt.subnet_keys : {
         rt_name   = rt.name
-        subnet_id = var.subnets_map[sk].id # picks the correct subnet
+        subnet_id = lookup(var.subnets_map, sk, null) # picks the correct subnet
       }
     ]
   ])

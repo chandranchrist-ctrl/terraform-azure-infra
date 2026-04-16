@@ -76,6 +76,7 @@ resource "azurerm_lb_rule" "lb_rules" {
   frontend_ip_configuration_name = azurerm_lb.lb.frontend_ip_configuration[0].name
   backend_address_pool_ids       = [azurerm_lb_backend_address_pool.backend_pools[each.value.backend_pool].id]
   probe_id                       = lookup(azurerm_lb_probe.probes, each.value.probe_name, null) != null ? azurerm_lb_probe.probes[each.value.probe_name].id : null
+  disable_outbound_snat          = true
 }
 
 # Flatten all NAT Pools

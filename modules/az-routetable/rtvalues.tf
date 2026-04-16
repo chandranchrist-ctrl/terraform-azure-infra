@@ -36,7 +36,7 @@ locals {
     },
     {
       name        = "spoke-app"
-      subnet_keys = ["app"] # this points to subnets_map["db"]
+      subnet_keys = ["app"] # this points to subnets_map["app"]
       routes = [
         # {
         #   name                = "internet-via-fw"

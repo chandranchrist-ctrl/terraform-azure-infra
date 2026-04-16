@@ -8,6 +8,10 @@ resource "azurerm_key_vault_certificate" "cert" {
     contents = filebase64(each.value.pfx_path)
     password = each.value.password
   }
+
+  depends_on = [
+    azurerm_key_vault_access_policy.me
+  ]  
 }
 
 # certificate_policy {

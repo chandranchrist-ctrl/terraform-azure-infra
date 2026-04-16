@@ -9,17 +9,15 @@ output "firewall_name" {
 }
 
 output "firewall_pip" {
-  value       = azurerm_public_ip.fwpip.ip_address
-  description = "Public IP of the Firewall"
+  value = var.firewall_mode == "public" ? azurerm_public_ip.fwpip[0].ip_address : null
 }
 
 output "firewall_pip_id" {
-  value = azurerm_public_ip.fwpip.id
+  value = var.firewall_mode == "public" ? azurerm_public_ip.fwpip[0].id : null
 }
 
 output "firewall_mgmt_pip" {
-  value       = azurerm_public_ip.fwmgmtpip.ip_address
-  description = "Management Public IP of the Firewall"
+  value = var.firewall_mode == "public" ? azurerm_public_ip.fwmgmtpip[0].ip_address : null
 }
 
 output "firewall_private_ips" {
@@ -27,7 +25,6 @@ output "firewall_private_ips" {
     firewall_main       = azurerm_firewall.fw.ip_configuration[0].private_ip_address
     firewall_management = azurerm_firewall.fw.management_ip_configuration[0].private_ip_address
   }
-  description = "Private IPs of the Firewall (main & management)"
 }
 
 output "private_ip" {
