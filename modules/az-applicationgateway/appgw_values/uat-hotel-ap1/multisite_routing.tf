@@ -43,31 +43,33 @@ FRONTEND IP & PORT HANDLING IN BASIC, PATH-BASED, MULTI-SITE, REDIRECT, SSL ROUT
 */
 
 locals {
-  multisite_app_name = "uat-biztalk"
+  multisite_app_name = "uat-hotel"
 
   multisite_routing = {
-    enabled    = false
+    enabled    = true
     skip_in_tf = false # Set true if you want to keep module in TF state but ignore it
 
     backend_pools = [
-      { name = "${local.multisite_app_name}-site1-be", ip_addresses = ["10.0.2.20"] }, # List of backend pool members (IP addresses of the application servers). This is where the Application Gateway will route traffic to.
-      { name = "${local.multisite_app_name}-site2-be", ip_addresses = ["10.0.2.21"] }
+      { name = "${local.multisite_app_name}-ms1-be", ip_addresses = ["10.0.2.20"] }, # List of backend pool members (IP addresses of the application servers). This is where the Application Gateway will route traffic to.
+      { name = "${local.multisite_app_name}-ms2-be", ip_addresses = ["10.0.2.21"] }
     ],
 
     listeners = [
       {
         name                           = "${local.multisite_app_name}-ms1-listener", # Name of the listener to associate with this routing rule. This must match the name of a defined listener in the Application Gateway.
-        frontend_ip_configuration_name = "${local.multisite_app_name}-ms1-feip",     # Name of the frontend IP configuration to associate with this listener. This must match the name of a defined frontend IP configuration in the Application Gateway.  
-        frontend_port_name             = "${local.multisite_app_name}-ms1-feport",   # Name of the frontend port to associate with this listener. This must match the name of a defined frontend port in the Application Gateway.
-        protocol                       = "Http",                                     # Protocol for the listener (Http or Https). Determines how the Application Gateway listens for incoming traffic.
-        host_name                      = "site1.uat.biztalk.com"                     # Host name for the listener. This is used for routing decisions based on the host header in incoming requests.
+        frontend_ip_configuration_name = "uat-appgw-public-fe",                      # Name of the frontend IP configuration to associate with this listener. This must match the name of a defined frontend IP configuration in the Application Gateway.  
+        frontend_port_name             = "uat-appgw-fe-port",                        # Name of the frontend port to associate with this listener. This must match the name of a defined frontend port in the Application Gateway.
+        protocol                       = "Https",                                    # Protocol for the listener (Http or Https). Determines how the Application Gateway listens for incoming traffic.
+        host_name                      = "uat-hotel-ap1.hbdev.co.in"
+        ssl_certificate_name           = "uat-appgw-ssl-cert" # Host name for the listener. This is used for routing decisions based on the host header in incoming requests.
       },
       {
         name                           = "${local.multisite_app_name}-ms2-listener",
-        frontend_ip_configuration_name = "${local.multisite_app_name}-ms2-feip",
-        frontend_port_name             = "${local.multisite_app_name}-ms2-feport",
-        protocol                       = "Http",
-        host_name                      = "site2.uat.biztalk.com"
+        frontend_ip_configuration_name = "uat-appgw-public-fe",
+        frontend_port_name             = "uat-appgw-fe-port",
+        protocol                       = "Https",
+        host_name                      = "uat-hotel-api.hbdev.co.in"
+        ssl_certificate_name           = "uat-appgw-ssl-cert"
       }
     ],
 
@@ -91,17 +93,39 @@ locals {
     ],
 
     http_settings = [ # Port on which the backend pool members are listening. The Application Gateway will forward traffic to this port on the backend servers.
-      { name = "${local.multisite_app_name}-ms1-httphst", port = 80, protocol = "Http", cookie_based_affinity = "Disabled", request_timeout = 60, probe_name = "${local.multisite_app_name}-ms1-probe" },
-      { name = "${local.multisite_app_name}-ms2-httphst", port = 80, protocol = "Http", cookie_based_affinity = "Disabled", request_timeout = 60, probe_name = "${local.multisite_app_name}-ms2-probe" }
+      {
+        name                  = "${local.multisite_app_name}-ms1-httphst"
+        port                  = 80
+        protocol              = "Http"
+        cookie_based_affinity = "Disabled"
+        request_timeout       = 60
+        probe_name            = "${local.multisite_app_name}-ms1-probe"
+      },
+      {
+        name                  = "${local.multisite_app_name}-ms2-httphst"
+        port                  = 80
+        protocol              = "Http"
+        cookie_based_affinity = "Disabled"
+        request_timeout       = 60
+        probe_name            = "${local.multisite_app_name}-ms2-probe"
+      }
     ],
 
     probes = [ # Health probes are used to monitor the health of backend pool members. You can define custom probes that check specific endpoints on your application servers to ensure they are healthy before routing traffic to them.
-      { name = "${local.multisite_app_name}-ms1-probe", protocol = "Http", path = "/health" },
-      { name = "${local.multisite_app_name}-ms2-probe", protocol = "Http", path = "/health" }
+      {
+        name     = "${local.multisite_app_name}-ms1-probe",
+        protocol = "Http",
+        path     = "/health",
+        host     = "uat-hotel-ap1.hbdev.co.in"
+      },
+      {
+        name     = "${local.multisite_app_name}-ms2-probe",
+        protocol = "Http",
+        path     = "/health",
+        host     = "uat-hotel-api.hbdev.co.in"
+      }
     ],
 
-    redirects     = [],
-    url_path_maps = []
   }
 }
 

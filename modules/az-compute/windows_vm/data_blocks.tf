@@ -53,10 +53,10 @@ locals {
     var.lb_backend_pool_id != null
     ? var.lb_backend_pool_id
     : (
-        length(data.azurerm_lb_backend_address_pool.existing) > 0
-        ? data.azurerm_lb_backend_address_pool.existing[0].id
-        : null
-      )
+      length(data.azurerm_lb_backend_address_pool.existing) > 0
+      ? data.azurerm_lb_backend_address_pool.existing[0].id
+      : null
+    )
   )
 }
 

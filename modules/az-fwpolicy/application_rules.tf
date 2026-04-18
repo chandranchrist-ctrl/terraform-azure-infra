@@ -16,9 +16,9 @@ locals {
           ]
         },
         {
-          name             = "block-github"
-          enabled          = false
-          source_addresses = var.all_vm_cidrs
+          name              = "block-github"
+          enabled           = false
+          source_addresses  = var.all_vm_cidrs
           destination_fqdns = ["*.github.com"]
         }
       ]

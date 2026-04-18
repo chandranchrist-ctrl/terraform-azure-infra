@@ -10,7 +10,7 @@ resource "azurerm_network_interface" "nic" {
     subnet_id                     = var.subnet_id
     private_ip_address_allocation = var.private_ip_allocation
 
-      public_ip_address_id = var.enable_public_ip ? azurerm_public_ip.pip[each.key].id : null
+    public_ip_address_id = var.enable_public_ip ? azurerm_public_ip.pip[each.key].id : null
   }
 
   tags = var.tags
@@ -58,7 +58,7 @@ resource "azurerm_public_ip" "pip" {
   sku               = "Standard"
 
   tags = var.tags
-  }
+}
 
 resource "azurerm_availability_set" "avset" {
   count = var.enable_availability_set ? 1 : 0
@@ -149,10 +149,10 @@ resource "azurerm_linux_virtual_machine" "vm" {
   # availability_set_id = var.enable_availability_set && length(var.zones) == 0 ? azurerm_availability_set.avset[0].id : null
 
   availability_set_id = (
-  var.enable_availability_set && length(local.zones) == 0
-  ? azurerm_availability_set.avset[0].id
-  : null
-)
+    var.enable_availability_set && length(local.zones) == 0
+    ? azurerm_availability_set.avset[0].id
+    : null
+  )
 
   # zone = length(var.zones) > 0 ? element(var.zones, index(local.vm_names, each.key) % length(var.zones)) : null
   # zone = length(var.zones) > 0 ? local.vm_zone_map[each.key] : null

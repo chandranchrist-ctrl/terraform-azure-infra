@@ -43,7 +43,7 @@ FRONTEND IP & PORT HANDLING IN BASIC, PATH-BASED, MULTI-SITE, REDIRECT, SSL ROUT
 */
 
 locals {
-  basic_app_name = "uat-biztalk" # Base name for all resources related to this application. Used as a prefix in resource names to ensure uniqueness and easy identification.
+  basic_app_name = "uat-hotel-ap1" # Base name for all resources related to this application. Used as a prefix in resource names to ensure uniqueness and easy identification.
 
   basic_routing = {
 
@@ -52,20 +52,21 @@ locals {
 
     backend_pools = [
       {
-        name         = "${local.basic_app_name}-basic-backend"
-        ip_addresses = ["10.0.2.4", "10.0.2.5"] # List of backend pool members (IP addresses of the application servers). This is where the Application Gateway will route traffic to.                              
+        name         = "${local.basic_app_name}-basic-be"
+        ip_addresses = ["10.0.2.4"] # List of backend pool members (IP addresses of the application servers). This is where the Application Gateway will route traffic to.                              
       }
     ]
 
-    listeners = [
-      {
-        name                           = "${local.basic_app_name}-basic-listener"
-        frontend_ip_configuration_name = "${local.basic_app_name}-basic-feip"
-        frontend_port_name             = "${local.basic_app_name}-basic-feport"
-        protocol                       = "Http"            # Protocol for the listener (Http or Https). Determines how the Application Gateway listens for incoming traffic.
-        host_name                      = "uat.biztalk.com" # Host name for the listener. This is used for routing decisions based on the host header in incoming requests.
-      }
-    ]
+    # listeners = [
+    #   {
+    #     name                           = "${local.basic_app_name}-basic-lsn"
+    #     frontend_ip_configuration_name = "uat-appgw-fe-ip"
+    #     frontend_port_name             = "uat-appgw-fe-port"
+    #     protocol                       = "Https"            # Protocol for the listener (Http or Https). Determines how the Application Gateway listens for incoming traffic.
+    #     host_name                      = "uat-hotel.hbcdev.co.in" # Host name for the listener. This is used for routing decisions based on the host header in incoming requests.
+    #     ssl_certificate_name           = "uat-appgw-ssl-cert"
+    #   }
+    # ]
 
     http_settings = [
       {
@@ -78,21 +79,17 @@ locals {
       }
     ]
 
-    probes = [] # Health probes are used to monitor the health of backend pool members. You can define custom probes that check specific endpoints on your application servers to ensure they are healthy before routing traffic to them.
-
     routing_rules = [
       {
         name                       = "${local.basic_app_name}-basic-rule"
-        listener_name              = "${local.basic_app_name}-basic-listener" # Name of the listener to associate with this routing rule. This must match the name of a defined listener in the Application Gateway.
-        backend_pool_name          = "${local.basic_app_name}-basic-backend"  # Name of the backend pool to route traffic to when this rule is matched. This must match the name of a defined backend pool in the Application Gateway.
-        backend_http_settings_name = "${local.basic_app_name}-basic-httphst"  # Name of the backend HTTP settings to use for this routing rule. This must match the name of a defined backend HTTP setting in the Application Gateway.
-        rule_type                  = "Basic"                                  # Type of routing rule. "Basic" means that the rule will route traffic based on the listener and backend pool association without any additional conditions. Other types include "PathBasedRouting" and "MultiSite".
+        listener_name              = "${var.env}-common-lsn"                 # Name of the listener to associate with this routing rule. This must match the name of a defined listener in the Application Gateway.
+        backend_pool_name          = "${local.basic_app_name}-basic-be"      # Name of the backend pool to route traffic to when this rule is matched. This must match the name of a defined backend pool in the Application Gateway.
+        backend_http_settings_name = "${local.basic_app_name}-basic-httphst" # Name of the backend HTTP settings to use for this routing rule. This must match the name of a defined backend HTTP setting in the Application Gateway.
+        rule_type                  = "Basic"                                 # Type of routing rule. "Basic" means that the rule will route traffic based on the listener and backend pool association without any additional conditions. Other types include "PathBasedRouting" and "MultiSite".
         priority                   = 10
       }
     ]
 
-    redirects     = []
-    url_path_maps = []
   }
 }
 

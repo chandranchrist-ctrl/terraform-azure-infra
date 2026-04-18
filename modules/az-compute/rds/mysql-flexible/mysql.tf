@@ -61,8 +61,6 @@ resource "azurerm_mysql_flexible_server" "mysql" {
     start_minute = 0
   }
 
-  replication_role = var.replication_role
-
   tags = var.tags
 }
 
@@ -76,15 +74,30 @@ resource "azurerm_mysql_flexible_database" "db" {
 }
 
 # Optional restore / replica logic
+# resource "azurerm_mysql_flexible_server" "replica" {
+#   count = (var.create_mode == "Replica" && var.source_server_id != null && var.replica_location != null) ? 1 : 0
+
+#   name                = "${var.db_servername}-replica"
+#   resource_group_name = var.resource_group_name
+#   location            = var.replica_location
+
+#   create_mode      = var.create_mode
+#   source_server_id = var.source_server_id
+
+#   sku_name = var.sku_name
+
+#   tags = var.tags
+# }
+
 resource "azurerm_mysql_flexible_server" "replica" {
-  count = (var.create_mode == "Replica" && var.source_server_id != null && var.replica_location != null) ? 1 : 0
+  count = var.enable_replica ? 1 : 0
 
   name                = "${var.db_servername}-replica"
   resource_group_name = var.resource_group_name
   location            = var.replica_location
 
-  create_mode      = var.create_mode
-  source_server_id = var.source_server_id
+  create_mode      = "Replica"
+  source_server_id = azurerm_mysql_flexible_server.mysql.id
 
   sku_name = var.sku_name
 

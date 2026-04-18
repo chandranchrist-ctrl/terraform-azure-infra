@@ -71,7 +71,7 @@ resource "azurerm_network_security_rule" "nsg_rule" {
   ########################################
   # CIDR OR SERVICE TAG SUPPORT
   ########################################
-  source_address_prefix = try(each.value.rule.source_address_prefix, null)
+  source_address_prefix      = try(each.value.rule.source_address_prefix, null)
   destination_address_prefix = try(each.value.rule.destination_address_prefix, null)
 
   source_address_prefixes      = try(each.value.rule.source_address_prefixes, null)

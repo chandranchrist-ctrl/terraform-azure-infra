@@ -8,29 +8,6 @@ resource "azurerm_storage_account_network_rules" "storage_network_rules" {
   ip_rules                   = var.allowed_ip_rules
 }
 
-resource "azurerm_storage_management_policy" "storage_management_policy" {
-  storage_account_id = azurerm_storage_account.storage_account.id
-
-  rule {
-    name    = "diagnostic-data-cleanup"
-    enabled = true
-
-    filters {
-      blob_types = ["blockBlob"]
-      prefix_match = [
-        "bootdiagnostics",
-        "insights-logs"
-      ]
-    }
-
-    actions {
-      base_blob {
-        delete_after_days_since_modification_greater_than = 1
-      }
-    }
-  }
-}
-
 resource "azurerm_storage_account" "storage_account" {
   name                = var.storage_account_name
   resource_group_name = var.resource_group_name

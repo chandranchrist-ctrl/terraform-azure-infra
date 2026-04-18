@@ -20,15 +20,11 @@ then imported into the main Application Gateway configuration as needed.
 
 */
 
-module "biztalk_uat" {
-  source = "../../modules/az-applicationgateway/appgw_values/biztalk-app-uat"
+module "uat-hotel" {
+  source = "../../modules/az-applicationgateway/appgw_values/uat-hotel-ap1"
 
-  frontend_ip_name   = var.frontend_ip_name
-  frontend_port_name = var.frontend_port_name
-  appgw_hostname     = var.appgw_hostname
-
+  env = var.env
 }
-
 
 locals {
 
@@ -42,11 +38,11 @@ Note:
 */
 
     # Biztalk UAT
-    module.biztalk_uat.basic_routing,
-    module.biztalk_uat.path_based_routing,
-    module.biztalk_uat.multisite_routing,
-    module.biztalk_uat.redirect_routing,
-    module.biztalk_uat.ssl_routing
+    module.uat-hotel.basic_routing,
+    # module.uat-hotel.path_based_routing,
+    module.uat-hotel.multisite_routing,
+    module.uat-hotel.redirect_routing,
+    module.uat-hotel.ip_to_fqdn
 
     # Payment UAT (Example for another application, currently commented out)
     # module.payment_uat.basic_routing,
@@ -70,7 +66,10 @@ Note:
   # Aggregate all the active routing configurations into a single configuration that can be used to define the Application Gateway resource. This combines the backend pools, listeners, HTTP settings, probes, routing rules, redirects, and URL path maps from all active configurations into a single structure.
 
   backend_pools = flatten([for c in local.active_configs : lookup(c, "backend_pools", [])])
-  listeners     = flatten([for c in local.active_configs : lookup(c, "listeners", [])])
+  # listeners     = flatten([for c in local.active_configs : lookup(c, "listeners", [])])
+
+  listeners = concat(local.common_listeners, flatten([for c in local.active_configs : lookup(c, "listeners", [])]))
+
   http_settings = flatten([for c in local.active_configs : lookup(c, "http_settings", [])])
   probes        = flatten([for c in local.active_configs : lookup(c, "probes", [])])
   routing_rules = flatten([for c in local.active_configs : lookup(c, "routing_rules", [])])

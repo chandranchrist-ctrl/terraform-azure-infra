@@ -1,6 +1,6 @@
 # Public IP for Firewall
 resource "azurerm_public_ip" "fwpip" {
-  count               = var.firewall_mode == "public" ? 1 : 0
+  count = var.firewall_mode == "public" ? 1 : 0
 
   name                = "${var.env}-fwpip-${var.sku_tier}"
   location            = var.location
@@ -36,12 +36,12 @@ resource "azurerm_firewall" "fw" {
   zones               = var.zones
 
   # Firewall IP Configuration
-ip_configuration {
-  name      = "configuration"
-  subnet_id = local.subnet_firewall_id
+  ip_configuration {
+    name      = "configuration"
+    subnet_id = local.subnet_firewall_id
 
-  public_ip_address_id = var.firewall_mode == "public" ? azurerm_public_ip.fwpip[0].id : null
-}
+    public_ip_address_id = var.firewall_mode == "public" ? azurerm_public_ip.fwpip[0].id : null
+  }
 
   management_ip_configuration {
     name                 = "management"

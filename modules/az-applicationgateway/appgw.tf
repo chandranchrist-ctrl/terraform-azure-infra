@@ -28,36 +28,80 @@ resource "azurerm_application_gateway" "appgw" {
     subnet_id = var.subnet_id             # Subnet ID where the Application Gateway will be deployed
   }
 
-  identity {
-    type = "SystemAssigned"
-  }
+  # identity {
+  #   type = "SystemAssigned"
+  # }
 
+  # dynamic "frontend_ip_configuration" {
+  #   for_each = var.frontend_ip_name != null ? [var.frontend_ip_name] : []
+  #   content {
+  #     name = "${var.env}-appgw-fe-ip"
+
+  #     # Attach public IP only if toggle is true
+  #     public_ip_address_id = var.enable_public_ip ? azurerm_public_ip.appgw-pip[0].id : null
+
+  #     # Private IP allocation type
+  #     private_ip_address_allocation = var.private_ip_allocation
+  #   }
+  # }
+
+  # dynamic "frontend_port" {
+  #   for_each = var.frontend_port_name != null ? [var.frontend_port_name] : []
+  #   content {
+  #     name = "${var.env}-appgw-fe-port"
+  #     port = var.port
+  #   }
+  # }
+
+  #   frontend_ip_configuration {
+  #   name                 = "${var.env}-appgw-fe-ip"
+  #   # public_ip_address_id = var.enable_public_ip ? azurerm_public_ip.appgw-pip[0].id : null
+  #   public_ip_address_id = var.enable_public_ip ? azurerm_public_ip.appgw-pip[0].id : null
+  # }
+
+  # Public Frontend
   dynamic "frontend_ip_configuration" {
-    for_each = var.frontend_ip_name != null ? [var.frontend_ip_name] : []
+    for_each = var.enable_public_ip ? [1] : []
+
     content {
-      name = "${var.env}-appgw-fe-ip"
-
-      # Attach public IP only if toggle is true
-      public_ip_address_id = var.enable_public_ip ? azurerm_public_ip.appgw-pip[0].id : null
-
-      # Private IP allocation type
-      private_ip_address_allocation = var.private_ip_allocation
+      name                 = "${var.env}-appgw-public-fe"
+      public_ip_address_id = azurerm_public_ip.appgw-pip[0].id
     }
   }
 
-  dynamic "frontend_port" {
-    for_each = var.frontend_port_name != null ? [var.frontend_port_name] : []
+  # Private Frontend
+  dynamic "frontend_ip_configuration" {
+    for_each = var.enable_private_ip ? [1] : []
+
     content {
-      name = "${var.env}-appgw-fe-port"
-      port = var.port
+      name                          = "${var.env}-appgw-private-fe"
+      subnet_id                     = var.subnet_id
+      private_ip_address_allocation = var.private_ip_allocation
+      private_ip_address            = var.private_ip_address
     }
+  }
+
+  frontend_port {
+    name = "${var.env}-appgw-fe-port"
+    port = var.port
+  }
+
+  frontend_port {
+    name = "${var.env}-appgw-fe-port-80"
+    port = var.port_http
   }
 
   # SSL Certificate for SSL Termination 
   # Note: This tells Azure: “Attach this certificate to Application Gateway frontend listener for HTTPS termination.”
+  # ssl_certificate {
+  #   name                = "${var.env}-${var.workload}-ssl-cert"
+  #   key_vault_secret_id = var.ssl_cert_secret_id
+  # }
+
   ssl_certificate {
-    name                = "${var.env}-${var.workload}-ssl-cert"
-    key_vault_secret_id = var.ssl_cert_secret_id
+    name     = "${var.env}-appgw-ssl-cert"
+    data     = filebase64("${path.module}/certs/certificate.pfx")
+    password = var.ssl_cert_password
   }
 
   # For SSL upload from GIT.
@@ -89,9 +133,25 @@ resource "azurerm_application_gateway" "appgw" {
       protocol              = backend_http_settings.value.protocol              # Protocol to use (Http or Https) when communicating with backend.
       cookie_based_affinity = backend_http_settings.value.cookie_based_affinity # Enable or disable cookie-based affinity (Session Persistence). Options: "Enabled" or "Disabled".
       request_timeout       = backend_http_settings.value.request_timeout       # Time (in seconds) that the Application Gateway waits for a response from the backend before timing out.
-      probe_name            = backend_http_settings.value.probe_name            # Name of the health probe to associate with this backend HTTP setting. Must match a defined health probe in the Application Gateway.
+      # probe_name            = backend_http_settings.value.probe_name            # Name of the health probe to associate with this backend HTTP setting. Must match a defined health probe in the Application Gateway.
+      probe_name = backend_http_settings.value.probe_name != null ? backend_http_settings.value.probe_name : null
     }
   }
+
+  dynamic "probe" {
+    for_each = local.probes
+    content {
+      name                = probe.value.name
+      protocol            = probe.value.protocol
+      path                = probe.value.path
+      interval            = lookup(probe.value, "interval", 30)
+      timeout             = lookup(probe.value, "timeout", 30)
+      unhealthy_threshold = lookup(probe.value, "unhealthy_threshold", 3)
+
+      host = lookup(probe.value, "host", null)
+    }
+  }
+
 
   # Dynamic block to create HTTP listeners for the Application Gateway
   # Supports single-site and multi-site routing based on the host_name property
@@ -104,6 +164,8 @@ resource "azurerm_application_gateway" "appgw" {
       frontend_port_name             = http_listener.value.frontend_port_name             # Name of the frontend port to associate with this listener (must match a defined frontend port)
       protocol                       = http_listener.value.protocol                       # Protocol to use for the listener (Http or Https)
       host_name                      = lookup(http_listener.value, "host_name", null)     # Optional host name for multi-site hosting scenarios (e.g., www.example.com). If not specified, the listener will accept traffic for any host.
+
+      ssl_certificate_name = lookup(http_listener.value, "ssl_certificate_name", null)
     }
   }
 
@@ -119,6 +181,8 @@ resource "azurerm_application_gateway" "appgw" {
       backend_http_settings_name = lookup(request_routing_rule.value, "backend_http_settings_name", null) # Name of the backend HTTP settings to use for this routing rule (must match a defined backend HTTP setting). Required for "Basic", "PathBasedRouting", and "MultiSite" rules. Ignored for "Redirect" rules.
 
       redirect_configuration_name = lookup(request_routing_rule.value, "redirect_name", null) # Name of the redirect configuration to use for this routing rule (must match a defined redirect configuration). Required for "Redirect" rules. Ignored for "Basic", "PathBasedRouting", and "MultiSite" rules.
+
+      url_path_map_name = lookup(request_routing_rule.value, "url_path_map_name", null)
     }
   }
 

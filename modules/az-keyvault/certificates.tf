@@ -11,7 +11,7 @@ resource "azurerm_key_vault_certificate" "cert" {
 
   depends_on = [
     azurerm_key_vault_access_policy.me
-  ]  
+  ]
 }
 
 # certificate_policy {

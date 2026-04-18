@@ -17,3 +17,4 @@ output "application_gateway_backend_pools" {
 output "all_active_routing" {
   value = local.active_configs
 }
+

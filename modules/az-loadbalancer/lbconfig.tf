@@ -5,19 +5,19 @@ locals {
 
       lb_rules = [
         {
-          name          = "nginx-http-rule"
-          protocol      = "Tcp"
-          frontend_port = 80
-          backend_port  = 80
-          probe_name    = "nginx-http-probe"
+          name                  = "nginx-http-rule"
+          protocol              = "Tcp"
+          frontend_port         = 80
+          backend_port          = 80
+          probe_name            = "nginx-http-probe"
           disable_outbound_snat = true
         },
         {
-          name          = "nginx-https-rule"
-          protocol      = "Tcp"
-          frontend_port = 443
-          backend_port  = 443
-          probe_name    = "nginx-https-probe"
+          name                  = "nginx-https-rule"
+          protocol              = "Tcp"
+          frontend_port         = 443
+          backend_port          = 443
+          probe_name            = "nginx-https-probe"
           disable_outbound_snat = true
         }
       ]

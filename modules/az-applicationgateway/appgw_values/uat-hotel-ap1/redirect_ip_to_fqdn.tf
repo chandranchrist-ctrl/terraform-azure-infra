@@ -27,8 +27,8 @@ IP-TO-FQDN LISTENER NOTE
 */
 
 locals {
-  ip_to_fqdn_config = {
-    enabled = false # toggle ON/OFF
+  ip_to_fqdn = {
+    enabled = true # toggle ON/OFF
 
     # Backend is empty because we are just redirecting IP to FQDN
     backend_pools = []
@@ -39,8 +39,8 @@ locals {
         name     = "ip-listener"
         protocol = "Http"
         # No host_name, so it catches requests by IP
-        frontend_ip_configuration_name = "${var.env}-appgw-fe-ip"
-        frontend_port_name             = "${var.env}-appgw-fe-port"
+        frontend_ip_configuration_name = "${var.env}-appgw-public-fe"
+        frontend_port_name             = "${var.env}-appgw-fe-port-80"
       }
     ]
 
@@ -48,8 +48,8 @@ locals {
     redirects = [
       {
         name = "ip-to-fqdn"
-        type = "Permanent"               # Permanent (301) or Temporary (302) redirect
-        url  = "https://uat.biztalk.com" # The FQDN to which IP requests will be redirected
+        type = "Permanent"                      # Permanent (301) or Temporary (302) redirect
+        url  = "https://uat-hotel.hbcdev.co.in" # The FQDN to which IP requests will be redirected
       }
     ]
 
@@ -59,7 +59,7 @@ locals {
         name          = "ip-redirect-rule"
         listener_name = "ip-listener" # The listener that catches IP requests
         rule_type     = "Basic"       # Basic rule that applies the redirect; no backend pool or HTTP settings needed
-        priority      = 5             # Priority of the rule (lower number means higher priority); adjust as needed to ensure it takes precedence over other rules
+        priority      = 7             # Priority of the rule (lower number means higher priority); adjust as needed to ensure it takes precedence over other rules
         redirect_name = "ip-to-fqdn"  # The redirect configuration to apply when this rule matches
       }
     ]
@@ -70,6 +70,6 @@ locals {
   }
 }
 
-output "redirect_ip_to_fqdn_config" {
-  value = local.ip_to_fqdn_config # Output the configuration for reference or use in other modules if needed
+output "ip_to_fqdn" {
+  value = local.ip_to_fqdn # Output the configuration for reference or use in other modules if needed
 }

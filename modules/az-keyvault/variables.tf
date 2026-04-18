@@ -80,3 +80,8 @@ variable "audit_storage_account_name" {
 variable "audit_storage_account_rg" {
   type = string
 }
+
+variable "tde_key_name" {
+  type    = string
+  default = "sql-tde-key"
+}

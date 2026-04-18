@@ -37,7 +37,20 @@ resource "azurerm_key_vault_access_policy" "me" {
     "List",
     "Create",
     "Delete",
+    "Import",
+    "Update",
+    "Backup",
+    "Restore",
+    "Recover",
+    "Purge",
     "Encrypt",
-    "Decrypt"
+    "Decrypt",
+    "Sign",
+    "Verify",
+    "WrapKey",
+    "UnwrapKey",
+    "Rotate",
+    "GetRotationPolicy",
+    "SetRotationPolicy"
   ]
 }

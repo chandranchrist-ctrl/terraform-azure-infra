@@ -48,3 +48,18 @@ variable "allowed_ip_rules" {
 variable "tags" {
   type = map(string)
 }
+
+# ✔ IMPORTANT: lifecycle optional
+variable "lifecycle_rules" {
+  type = list(object({
+    name   = string
+    prefix = list(string)
+    days   = number
+  }))
+  default = []
+}
+
+variable "containers" {
+  type    = list(string)
+  default = []
+}

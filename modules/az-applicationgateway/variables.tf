@@ -35,15 +35,12 @@ variable "frontend_ip_name" {
   description = "Name of the existing frontend IP configuration in Application Gateway"
 }
 
-variable "frontend_port_name" {
-  type        = string
-  description = "Name of the existing frontend port in Application Gateway"
-}
 
-variable "appgw_hostname" {
-  type        = string
-  description = "The hostname that this redirect listener will catch; this should match the host header of incoming requests that you want to redirect from IP to FQDN."
-}
+
+# variable "appgw_hostname" {
+#   type        = string
+#   description = "The hostname that this redirect listener will catch; this should match the host header of incoming requests that you want to redirect from IP to FQDN."
+# }
 
 variable "sku" {
   type        = string
@@ -91,6 +88,12 @@ variable "sku_capacity" {
 variable "port" {
   description = "Frontend port for Application Gateway"
   type        = number
+  default     = 443
+}
+
+variable "port_http" {
+  description = "Frontend port for Application Gateway"
+  type        = number
   default     = 80
 }
 
@@ -121,15 +124,11 @@ variable "enable_ssl_routing" {
   default = false
 }
 
-variable "application_gateway_hostname" {
-  type        = string
-  description = "The hostname that this redirect listener will catch; this should match the host header of incoming requests that you want to redirect from IP to FQDN."
-}
+# variable "application_gateway_hostname" {
+#   type        = string
+#   description = "The hostname that this redirect listener will catch; this should match the host header of incoming requests that you want to redirect from IP to FQDN."
+# }
 
-variable "key_vault_id" {
-  type        = string
-  description = "The resource ID of the Key Vault containing the SSL certificate for Application Gateway SSL termination"
-}
 
 /*
 # Note: 
@@ -146,8 +145,38 @@ variable "key_vault_id" {
 
 */
 
-variable "ssl_cert_secret_id" {
+
+# variable "key_vault_id" {
+#   type        = string
+#   description = "The resource ID of the Key Vault containing the SSL certificate for Application Gateway SSL termination"
+# }
+
+# variable "ssl_cert_secret_id" {
+#   type        = string
+#   description = "Key Vault secret ID for SSL certificate"
+# }
+
+variable "ssl_cert_password" {
   type        = string
-  description = "Key Vault secret ID for SSL certificate"
+  description = "Password for PFX certificate"
 }
 
+variable "frontend_port_name" {
+  type        = string
+  description = "Name of the existing frontend port in Application Gateway"
+}
+
+# variable "common_listener_name" {
+#   type        = string
+#   description = "Shared listener name for basic/path/redirect routing"
+# }
+
+variable "enable_private_ip" {
+  type    = bool
+  default = false
+}
+
+variable "private_ip_address" {
+  type    = string
+  default = null
+}

@@ -110,21 +110,19 @@ variable "maintenance_hour" {
   type = number
 }
 
-
-variable "replication_role" {
-  type = string
-}
-
-variable "create_mode" {
-  type = string
-}
-
-variable "source_server_id" {
-  type = string
+variable "enable_replica" {
+  type    = bool
+  default = false
 }
 
 variable "replica_location" {
-  type = string
+  type    = string
+  default = null
+
+  validation {
+    condition     = var.enable_replica == false || var.replica_location != null
+    error_message = "replica_location must be set when enable_replica = true."
+  }
 }
 
 variable "server_configurations" {

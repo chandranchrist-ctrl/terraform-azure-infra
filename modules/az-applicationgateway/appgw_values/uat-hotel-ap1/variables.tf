@@ -12,3 +12,8 @@ variable "appgw_hostname" {
   type    = string
   default = null # optional
 }
+
+variable "env" {
+  description = "Prefix for route table names"
+  type        = string
+}

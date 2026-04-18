@@ -135,11 +135,11 @@ resource "azurerm_windows_virtual_machine" "vm" {
     azurerm_network_interface.nic[each.key].id
   ]
 
-    availability_set_id = (
-  var.enable_availability_set && length(local.zones) == 0
-  ? azurerm_availability_set.avset[0].id
-  : null
-)
+  availability_set_id = (
+    var.enable_availability_set && length(local.zones) == 0
+    ? azurerm_availability_set.avset[0].id
+    : null
+  )
 
 
   # zone         = length(var.zones) > 0 ? element(var.zones, index(local.vm_names, each.key) % length(var.zones)) : null
@@ -150,14 +150,14 @@ resource "azurerm_windows_virtual_machine" "vm" {
     caching              = "ReadWrite"
     storage_account_type = var.os_disk_storage_type
     disk_size_gb         = var.os_disk_size_gb
-  }  
+  }
 
-   source_image_reference {
+  source_image_reference {
     publisher = "MicrosoftWindowsServer"
     offer     = "WindowsServer"
     sku       = var.image_sku
     version   = "latest"
-  } 
+  }
 
   license_type = var.license_type
 
