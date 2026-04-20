@@ -623,7 +623,6 @@ module "mssql" {
 
   allowed_ips = ["49.37.211.249"] # only used if public enabled
 
-
   # TDE (Encryption)
   enable_tde       = false
   use_cmk_tde      = false
