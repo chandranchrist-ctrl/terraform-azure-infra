@@ -11,7 +11,7 @@ locals {
           source_addresses    = ["*"]
           destination_address = var.firewall_public_ip
           destination_ports   = ["80"]
-          translated_address  = "10.2.1.70"
+          translated_address  = var.vm_private_ips                            # "10.2.1.70"
           translated_port     = "80"
           protocols           = ["TCP"]
         },
@@ -21,7 +21,7 @@ locals {
           source_addresses    = ["*"]
           destination_address = var.firewall_public_ip
           destination_ports   = ["443"]
-          translated_address  = "10.2.1.70"
+          translated_address  = var.vm_private_ips                                  # "10.2.1.70"
           translated_port     = "443"
           protocols           = ["TCP"]
         }

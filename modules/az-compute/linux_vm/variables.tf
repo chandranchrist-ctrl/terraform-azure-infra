@@ -83,16 +83,18 @@ variable "enable_availability_set" {
   default = true
 }
 
-
-
-variable "auth_mode" {
+variable "disable_password_authentication" {
   type = string
-
-  validation {
-    condition     = contains(["ssh", "password"], var.auth_mode)
-    error_message = "auth_mode must be 'ssh' or 'password'"
-  }
 }
+
+# variable "auth_mode" {
+#   type = string
+
+#   validation {
+#     condition     = contains(["ssh", "password"], var.auth_mode)
+#     error_message = "auth_mode must be 'ssh' or 'password'"
+#   }
+# }
 
 variable "enable_boot_diagnostics" {
   type    = bool

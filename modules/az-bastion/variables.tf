@@ -19,9 +19,9 @@ variable "tags" {
   default     = {}
 }
 
-variable "firewall_public_ip_id" {
-  type = string
-}
+# variable "firewall_public_ip_id" {
+#   type = string
+# }
 
 variable "sku" {
   type = string

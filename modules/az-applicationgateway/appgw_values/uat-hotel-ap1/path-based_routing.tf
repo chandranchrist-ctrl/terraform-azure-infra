@@ -47,13 +47,13 @@ locals {
 
   path_based_routing = {
 
-    enabled    = true
+    enabled    = false
     skip_in_tf = false # Set true if you want to keep module in TF state but ignore it
 
     backend_pools = [
       {
         name         = "${local.path_app_name}-ap1"
-        ip_addresses = ["10.0.2.10"] # List of backend pool members (IP addresses of the application servers). This is where the Application Gateway will route traffic to.
+        ip_addresses = [] # List of backend pool members (IP addresses of the application servers). This is where the Application Gateway will route traffic to.
       },
       {
         name         = "${local.path_app_name}-api"

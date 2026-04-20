@@ -28,3 +28,10 @@ output "public_ip_ids" {
     for k, v in azurerm_public_ip.pip : k => v.id
   }
 }
+
+output "private_ip" {
+  value = [
+    for nic in azurerm_network_interface.nic :
+    nic.private_ip_address
+  ]
+}

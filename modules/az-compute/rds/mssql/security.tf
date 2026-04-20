@@ -107,3 +107,11 @@ resource "azurerm_key_vault_access_policy" "sql" {
 #   role_definition_name = "Storage Blob Data Contributor"
 #   principal_id         = azurerm_mssql_server.mssql.identity[0].principal_id
 # }
+
+resource "azurerm_mssql_virtual_network_rule" "service_endpoint_app" {
+  count = var.enable_service_endpoint_mssql ? 1 : 0
+
+  name      = "${var.server_name}-vnet-se-rule"
+  server_id = azurerm_mssql_server.mssql.id
+  subnet_id = var.app_subnet_id
+}

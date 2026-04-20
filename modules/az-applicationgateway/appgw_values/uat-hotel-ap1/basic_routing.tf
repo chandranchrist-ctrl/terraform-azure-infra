@@ -53,7 +53,7 @@ locals {
     backend_pools = [
       {
         name         = "${local.basic_app_name}-basic-be"
-        ip_addresses = ["10.0.2.4"] # List of backend pool members (IP addresses of the application servers). This is where the Application Gateway will route traffic to.                              
+        ip_addresses = [] # List of backend pool members (IP addresses of the application servers). This is where the Application Gateway will route traffic to.                              
       }
     ]
 

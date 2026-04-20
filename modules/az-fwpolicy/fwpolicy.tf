@@ -105,7 +105,10 @@ resource "azurerm_firewall_policy_rule_collection_group" "main" {
           source_addresses    = rule.value.source_addresses
           destination_address = rule.value.destination_address
           destination_ports   = rule.value.destination_ports
-          translated_address  = rule.value.translated_address
+          # translated_address  = rule.value.translated_address
+
+          translated_address = length(var.vm_private_ips) > 0 ? var.vm_private_ips[0] : null
+
           translated_port     = rule.value.translated_port
           protocols           = rule.value.protocols
         }

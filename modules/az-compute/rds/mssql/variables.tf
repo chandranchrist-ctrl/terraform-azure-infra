@@ -255,3 +255,17 @@ variable "storage_account_type" {
 variable "storage_account_id" {
   type = string
 }
+
+variable "private_dns_zone_id" {
+  type    = string
+  default = null
+}
+
+variable "app_subnet_id" {
+  type = string
+}
+
+variable "enable_service_endpoint_mssql" {
+  type    = bool
+  default = false
+}

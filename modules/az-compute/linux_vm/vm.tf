@@ -14,6 +14,10 @@ resource "azurerm_network_interface" "nic" {
   }
 
   tags = var.tags
+
+  lifecycle {
+  create_before_destroy = true
+}
 }
 
 resource "azurerm_application_security_group" "asg" {
@@ -115,8 +119,8 @@ locals {
   } : {}
 
 
-  use_ssh      = var.auth_mode == "ssh"
-  use_password = var.auth_mode == "password"
+  # use_ssh      = var.auth_mode == "ssh"
+  # use_password = var.auth_mode == "password"
 }
 
 resource "azurerm_linux_virtual_machine" "vm" {
@@ -132,18 +136,23 @@ resource "azurerm_linux_virtual_machine" "vm" {
     azurerm_network_interface.nic[each.key].id
   ]
 
-  disable_password_authentication = local.use_ssh
+  disable_password_authentication = var.disable_password_authentication
 
   admin_username = local.localadmin_creds.admin-username
   admin_password = local.localadmin_creds.admin-password
 
-  dynamic "admin_ssh_key" {
-    for_each = local.use_ssh ? [1] : []
+  # dynamic "admin_ssh_key" {
+  #   for_each = local.use_ssh ? [1] : []
 
-    content {
-      username   = local.localadmin_creds.admin-username
-      public_key = data.azurerm_key_vault_secret.ssh_public_key.value
-    }
+  #   content {
+  #     username   = local.localadmin_creds.admin-username
+  #     public_key = data.azurerm_key_vault_secret.ssh_public_key.value
+  #   }
+  # }
+
+  admin_ssh_key {
+  username   = local.localadmin_creds.admin-username
+  public_key = data.azurerm_key_vault_secret.ssh_public_key.value
   }
 
   # availability_set_id = var.enable_availability_set && length(var.zones) == 0 ? azurerm_availability_set.avset[0].id : null

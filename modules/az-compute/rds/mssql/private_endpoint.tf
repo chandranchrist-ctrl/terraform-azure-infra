@@ -11,4 +11,16 @@ resource "azurerm_private_endpoint" "mssql" {
     subresource_names              = ["sqlServer"]
     is_manual_connection           = false
   }
+
+  # DNS AUTO-INTEGRATION (IMPORTANT)
+  dynamic "private_dns_zone_group" {
+    for_each = (
+      var.enable_private_endpoint && var.private_dns_zone_id != null
+    ) ? [1] : []
+
+    content {
+      name                 = "mssql-dns-zone-group"
+      private_dns_zone_ids = [var.private_dns_zone_id]
+    }
+  }
 }

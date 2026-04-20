@@ -25,8 +25,11 @@ resource "azurerm_subnet" "subnet" {
   virtual_network_name = azurerm_virtual_network.vnet[each.value.vnet_key].name
   address_prefixes     = each.value.cidr
 
+  default_outbound_access_enabled = var.default_outbound_access_enabled
+
   service_endpoints = [
     "Microsoft.KeyVault",
-    "Microsoft.Storage"
+    "Microsoft.Storage",
+    "Microsoft.Sql"
   ]
 }

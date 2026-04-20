@@ -34,3 +34,9 @@ variable "sku" {
 variable "firewall_public_ip" {
   type = string
 }
+
+variable "vm_private_ips" {
+  description = "List of VM private IPs for NAT rule translations"
+  type        = list(string)
+  default     = []
+}

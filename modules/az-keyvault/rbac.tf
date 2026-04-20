@@ -12,6 +12,8 @@
 Used instead of RBAC because RBAC role assignments are restricted in my environment. */
 
 resource "azurerm_key_vault_access_policy" "me" {
+  count = var.create_access_policy_me ? 1 : 0
+
   key_vault_id = azurerm_key_vault.kv.id
 
   tenant_id = data.azurerm_client_config.current.tenant_id

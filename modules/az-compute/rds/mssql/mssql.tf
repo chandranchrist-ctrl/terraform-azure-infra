@@ -65,3 +65,5 @@ resource "azurerm_mssql_database" "db" {
 
   tags = var.tags
 }
+
+

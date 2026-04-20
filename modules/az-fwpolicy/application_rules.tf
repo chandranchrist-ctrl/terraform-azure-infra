@@ -1,25 +1,40 @@
 locals {
   application_rule_collections = [
-    {
-      name     = "app-deny"
-      priority = 300
-      action   = "Deny"
+     {
+      name     = "allow-business-apps"
+      priority = 100
+      action   = "Allow"
+
       rules = [
         {
-          name             = "block-social"
-          enabled          = true
-          source_addresses = var.all_vm_cidrs
+          name              = "allow-azure-services"
+          enabled           = true
+          source_addresses  = var.all_vm_cidrs
           destination_fqdns = [
-            "*.youtube.com",
-            "*.facebook.com",
-            "*.instagram.com"
+            "*.microsoft.com",
+            "*.azure.com",
+            "*.windows.net"
           ]
         },
         {
-          name              = "block-github"
-          enabled           = false
+          name              = "allow-dev-tools"
+          enabled           = true
           source_addresses  = var.all_vm_cidrs
-          destination_fqdns = ["*.github.com"]
+          destination_fqdns = [
+            "login.github.com",
+            "*.visualstudio.com",
+            "*.vscode.dev"
+          ]
+        },
+        {
+          name              = "allow-package-repos"
+          enabled           = true
+          source_addresses  = var.all_vm_cidrs
+          destination_fqdns = [
+            "registry.npmjs.org",
+            "pypi.org",
+            "*.docker.com"
+          ]
         }
       ]
     }

@@ -180,3 +180,9 @@ variable "private_ip_address" {
   type    = string
   default = null
 }
+
+variable "backend_ips" {
+  description = "List of backend VM private IPs"
+  type        = list(string)
+  default     = []
+}

@@ -12,7 +12,7 @@ terraform {
 terraform {
   backend "azurerm" {
     resource_group_name  = "tfstate-rg"
-    storage_account_name = "uatstatehoteltf11"
+    storage_account_name = "uatstatehoteltf14"
     container_name       = "tfstate"
     key                  = "staging.terraform.tfstate"
   }
@@ -27,7 +27,7 @@ terraform {
 
 provider "azurerm" {
   features {}
-  subscription_id = "96d47cac-de1c-4194-83f4-74e2d25bcf45" /* change manually when needed */
+  subscription_id = var.subscription_id       # "96d47cac-de1c-4194-83f4-74e2d25bcf45" /* change manually when needed */
 }
 
 locals {
@@ -62,6 +62,8 @@ module "virtual_network" {
   location            = module.rg.resource_group_location
   tags                = module.rg.tags
 
+  default_outbound_access_enabled = false
+
   # VNet CIDR
   vnet_address_space = { /* VNet key must match the corresponding key in subnet_address_space to map subnets to the correct VNet */
     hub   = ["10.0.0.0/16"]
@@ -93,11 +95,6 @@ module "virtual_network" {
     }
 
     spoke = {
-      /*     web = {
-      cidr = ["10.1.1.0/26"]
-      tags = { type = "workload" }
-    } */
-
       app = {
         cidr = ["10.1.1.64/26"]
         tags = { type = "workload" }
@@ -144,7 +141,9 @@ module "vnet_peering" {
 module "storage_account" {
   source = "../../modules/az-storage"
 
-  storage_account_name = "${local.env}storageaccdiag16" /* Storage Account names must be globally unique across Azure. */
+  # storage_account_name = var.storage_account_name       # "${local.env}storageaccdiag16" /* Storage Account names must be globally unique across Azure. */
+  for_each = var.storage_accounts 
+  storage_account_name = each.value
 
   location            = module.rg.resource_group_location
   resource_group_name = module.rg.resource_group_name
@@ -186,7 +185,7 @@ module "storage_account" {
 module "sql_logs_storage_account" {
   source = "../../modules/az-storage"
 
-  storage_account_name = "${local.env}storageaccsqllogs06"
+  storage_account_name = var.sql_logs_storage_account_name         # "${local.env}storageaccsqllogs06"
 
   location            = module.rg.resource_group_location
   resource_group_name = module.rg.resource_group_name
@@ -245,11 +244,13 @@ module "sql_logs_storage_account" {
 module "key_vault" {
   source = "../../modules/az-keyvault"
 
-  name = "${local.env}-${local.workload}-kv-17" /* Key Vault names must be globally unique across Azure. */
+  name = var.key_vault_name       # "${local.env}-${local.workload}-kv-17" /* Key Vault names must be globally unique across Azure. */
 
   location            = module.rg.resource_group_location
   resource_group_name = module.rg.resource_group_name
   tags                = module.rg.tags
+
+  create_access_policy_me = true
 
   sku_name = "standard" # Standard or Premium
 
@@ -297,16 +298,39 @@ module "key_vault" {
   ]
 
   # Diagnostics Settings Inputs
-  audit_storage_account_name = module.storage_account.storage_account_name /* Ex. "kvlogstorage" to declare the name directly */
+  audit_storage_account_name = module.storage_account["sa1"].storage_account_name    /* Ex. "kvlogstorage" to declare the name directly */
   audit_storage_account_rg   = module.rg.resource_group_name
 
   depends_on = [module.storage_account]
 }
 
+
+module "private_dns" {
+  source = "../../modules/az-dns/private"
+
+  resource_group_name = module.rg.resource_group_name
+
+  zones = [
+    "privatelink.database.windows.net",
+    "privatelink.blob.core.windows.net",
+    "privatelink.vaultcore.azure.net"
+  ]
+
+  vnet_ids = [
+    module.virtual_network.vnets["hub"].id,
+    module.virtual_network.vnets["spoke"].id
+  ]
+
+  # vnet_ids = [
+  #   for v in module.virtual_network.vnets : v.id
+  # ]
+}
+
+
 module "route_tables" {
   source = "../../modules/az-routetable"
 
-  create_rt = false
+  create_rt = true
 
   env = "${local.env}-rt"
 
@@ -363,10 +387,14 @@ module "fw_policy" {
 
   sku = "Basic"
 
-  all_vm_cidrs = concat(["10.1.1.0/26"], ["10.1.1.64/26"]) # example CIDRs for VM subnets; adjust as needed 
+  all_vm_cidrs = concat(["10.1.1.64/26"]) # example CIDRs for VM subnets; adjust as needed 
 
   firewall_public_ip = module.firewall.firewall_pip
 
+      vm_private_ips = flatten([
+    # module.linux_vm.private_ip,
+    module.windows_vm.private_ip
+  ])
 }
 
 module "bastion" {
@@ -381,7 +409,7 @@ module "bastion" {
   subnet_id = module.virtual_network.subnet_lookup["AzureBastionSubnet"]
 
   # firewall_public_ip_id   = module.firewall_basic.firewall_pip_id
-  firewall_public_ip_id = module.firewall.firewall_pip_id
+  # firewall_public_ip_id = module.firewall.firewall_pip_id
 
   # Bastion SKU
   sku = "Standard"
@@ -428,7 +456,7 @@ module "windows_vm" {
 
   enable_boot_diagnostics               = true
   boot_diagnostics_mode                 = "existing"                                  # "none", "existing", or "create"
-  boot_diagnostics_storage_account_name = module.storage_account.storage_account_name # "uatbiztalkdiag"
+  boot_diagnostics_storage_account_name = module.storage_account["sa1"].storage_account_name # "uatbiztalkdiag"
 
 
   # KEY VAULT INPUTS (NEW)
@@ -471,13 +499,11 @@ module "windows_vm" {
   ]
 }
 
-/* module "linux_vm" {
+module "linux_vm" {
   source = "../../modules/az-compute/linux_vm"
 
   env = local.env
   workload = local.workload
-
-  
 
   resource_group_name = module.rg.resource_group_name
   location            = module.rg.resource_group_location
@@ -489,7 +515,7 @@ module "windows_vm" {
   vm_size  = "Standard_B2s"
   image_sku = "18.04-LTS"
 
-  subnet_id = module.virtual_network.subnet_lookup["web"]
+  subnet_id = module.virtual_network.subnet_lookup["app"]
 
   private_ip_allocation = "Dynamic"
 
@@ -506,12 +532,14 @@ module "windows_vm" {
 
   enable_boot_diagnostics               = true
   boot_diagnostics_mode                 = "existing" # "none", "existing", or "create"
-  boot_diagnostics_storage_account_name =  module.storage_account.storage_account_name          # "uatbiztalkdiag"
+  boot_diagnostics_storage_account_name =  module.storage_account["sa1"].storage_account_name          # "uatbiztalkdiag"
 
   # 🔐 KEY VAULT INPUTS (NEW)
   key_vault_id = module.key_vault.key_vault_id # change manually when needed; ensure this KV exists and has the necessary secrets for admin username and password
 
-  auth_mode = "ssh" # "password" or "ssh"
+  disable_password_authentication = false
+
+  # auth_mode = "password" # "password" or "ssh"
 
   localadmin_credentials_secret_name = "localadmin-credentials"
 
@@ -548,7 +576,111 @@ module "windows_vm" {
   module.key_vault,
   module.storage_account
 ]
-} */
+}
+
+module "mssql" {
+  source = "../../modules/az-compute/rds/mssql"
+
+  # Basic Identity
+  server_name   = "${local.env}-${local.workload}-sql1"
+  database_name = "${local.env}_${local.workload}_db1"
+
+  resource_group_name = module.rg.resource_group_name
+  location            = module.rg.resource_group_location
+  tags                = module.rg.tags
+
+  # Server Config
+  server_version = "12.0"
+  sku_name       = "Basic"
+  max_size_gb    = 2
+  collation      = "SQL_Latin1_General_CP1_CI_AS"
+
+
+  zone_redundant       = false
+  read_scale           = false
+  storage_account_type = "Local"
+
+  storage_account_id = module.sql_logs_storage_account.storage_account_id
+
+  # Authentication (from Key Vault)
+  key_vault_id    = module.key_vault.key_vault_id
+  sql_secret_name = "mssql-credentials"
+
+  enable_aad_admin        = false
+  azuread_admin_username  = "AzureAD Admin"
+  azuread_admin_object_id = null
+
+
+  # Network Mode (UAT/PROD toggle)
+  enable_public_access    = true # PROD → false (private only), UAT → can be true if needed
+  enable_private_endpoint = true
+  private_subnet_id       = module.virtual_network.subnet_lookup["db"]
+  private_dns_zone_id     = module.private_dns.zone_ids["privatelink.database.windows.net"]
+
+  # Service Endpoint
+  enable_service_endpoint_mssql = true
+  app_subnet_id = module.virtual_network.subnet_lookup["app"]
+
+  allowed_ips = ["49.37.211.249"] # only used if public enabled
+
+
+  # TDE (Encryption)
+  enable_tde       = false
+  use_cmk_tde      = false
+  key_vault_key_id = null
+  # key_vault_key_id = module.key_vault.sql_tde_key_id
+
+
+  # Auditing
+  enable_auditing        = false
+  audit_storage_endpoint = module.sql_logs_storage_account.primary_blob_endpoint
+  audit_retention_days   = 1
+
+
+  # Security Alerts
+  enable_security_alerts = false
+  alert_retention_days   = 1
+  alerts_state           = "Enabled"
+
+  # Email Accounts
+  email_account_admins = false
+  email_addresses = [
+    "dba@company.com",
+    "cloudops@company.com",
+    "security@company.com"
+  ]
+
+
+  # Vulnerability Assessment
+  enable_va = false
+  va_state  = false # or "Disabled"
+
+  va_storage_container = module.sql_logs_storage_account.container_urls["sql-va-logs"]
+  va_storage_key       = module.sql_logs_storage_account.primary_access_key
+
+
+  # Backup / LTR
+  short_term_retention_days = 7
+
+  enable_long_term_retention = false
+
+  ltr_weekly_retention  = "P4W"
+  ltr_monthly_retention = "P12M"
+  ltr_yearly_retention  = "P3Y"
+  ltr_week_of_year      = 1
+
+
+  # Optional Features
+  enable_outbound_firewall = false
+
+  # Dependencies
+  depends_on = [
+    module.key_vault,
+    module.virtual_network,
+    module.sql_logs_storage_account,
+    module.private_dns
+  ]
+}
 
 /* 
 module "loadbalancer" {
@@ -621,108 +753,15 @@ module "appgw" {
 
   # common_listener_name = "${local.env}-common-listener"
 
+    # DIRECT PASS (NO locals block required)
+backend_ips = flatten([
+  # module.linux_vm.private_ip
+  module.windows_vm.private_ip
+])
+
+
   depends_on = [
     module.key_vault
-  ]
-}
-
-
-module "mssql" {
-  source = "../../modules/az-compute/rds/mssql"
-
-  # Basic Identity
-  server_name   = "${local.env}-${local.workload}-sql1"
-  database_name = "${local.env}_${local.workload}_db1"
-
-  resource_group_name = module.rg.resource_group_name
-  location            = module.rg.resource_group_location
-  tags                = module.rg.tags
-
-  # Server Config
-  server_version = "12.0"
-  sku_name       = "Basic"
-  max_size_gb    = 2
-  collation      = "SQL_Latin1_General_CP1_CI_AS"
-
-
-  zone_redundant       = false
-  read_scale           = false
-  storage_account_type = "Local"
-
-  storage_account_id = module.sql_logs_storage_account.storage_account_id
-
-  # Authentication (from Key Vault)
-  key_vault_id    = module.key_vault.key_vault_id
-  sql_secret_name = "mssql-credentials"
-
-  enable_aad_admin        = false
-  azuread_admin_username  = "AzureAD Admin"
-  azuread_admin_object_id = null
-
-
-  # Network Mode (UAT/PROD toggle)
-  enable_public_access    = true # PROD → false (private only), UAT → can be true if needed
-  enable_private_endpoint = true
-  private_subnet_id       = module.virtual_network.subnet_lookup["db"]
-
-  allowed_ips = ["49.37.211.249"] # only used if public enabled
-
-
-  # TDE (Encryption)
-  enable_tde       = false
-  use_cmk_tde      = false
-  key_vault_key_id = null
-  # key_vault_key_id = module.key_vault.sql_tde_key_id
-
-
-  # Auditing
-  enable_auditing        = false
-  audit_storage_endpoint = module.sql_logs_storage_account.primary_blob_endpoint
-  audit_retention_days   = 1
-
-
-  # Security Alerts
-  enable_security_alerts = false
-  alert_retention_days   = 1
-  alerts_state           = "Enabled"
-
-  # Email Accounts
-  email_account_admins = false
-  email_addresses = [
-    "dba@company.com",
-    "cloudops@company.com",
-    "security@company.com"
-  ]
-
-
-  # Vulnerability Assessment
-  enable_va = false
-  va_state  = false # or "Disabled"
-
-  va_storage_container = module.sql_logs_storage_account.container_urls["sql-va-logs"]
-  va_storage_key       = module.sql_logs_storage_account.primary_access_key
-
-
-  # Backup / LTR
-  short_term_retention_days = 7
-
-  enable_long_term_retention = false
-
-  ltr_weekly_retention  = "P4W"
-  ltr_monthly_retention = "P12M"
-  ltr_yearly_retention  = "P3Y"
-  ltr_week_of_year      = 1
-
-
-  # Optional Features
-  enable_outbound_firewall = false
-
-
-  # Dependencies
-  depends_on = [
-    module.key_vault,
-    module.virtual_network,
-    module.sql_logs_storage_account
   ]
 }
 
@@ -781,7 +820,7 @@ module "mysql" {
   maintenance_hour = 1    # Hour of day (UTC) when maintenance starts; # Example: # Range: 0–23; 1 = 01:00 UTC
 
   enable_diagnostics = true
-  diagnostic_storage_account_id = module.storage_account.storage_account_id
+  diagnostic_storage_account_id = module.storage_account["sa1"].storage_account_name
 
   enable_replica   = false
   replica_location = "Central India"

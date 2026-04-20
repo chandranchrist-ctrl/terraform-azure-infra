@@ -85,3 +85,9 @@ variable "tde_key_name" {
   type    = string
   default = "sql-tde-key"
 }
+
+variable "create_access_policy_me" {
+  description = "Create access policy for current user"
+  type        = bool
+  default     = false
+}
