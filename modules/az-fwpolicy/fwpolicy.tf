@@ -109,8 +109,8 @@ resource "azurerm_firewall_policy_rule_collection_group" "main" {
 
           translated_address = length(var.vm_private_ips) > 0 ? var.vm_private_ips[0] : null
 
-          translated_port     = rule.value.translated_port
-          protocols           = rule.value.protocols
+          translated_port = rule.value.translated_port
+          protocols       = rule.value.protocols
         }
       }
     }

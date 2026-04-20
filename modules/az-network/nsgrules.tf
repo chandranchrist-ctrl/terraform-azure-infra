@@ -5,12 +5,12 @@ locals {
     # Rules for web subnet (example: allow HTTP traffic)
     "spoke-app" = [
       {
-        name                   = "allow-http-https"
-        priority               = 100
-        direction              = "Inbound"
-        access                 = "Allow"
-        protocol               = "Tcp"
-        source_port_range      = "*"
+        name                    = "allow-http-https"
+        priority                = 100
+        direction               = "Inbound"
+        access                  = "Allow"
+        protocol                = "Tcp"
+        source_port_range       = "*"
         destination_port_ranges = ["80", "443"] # # Use "destination_port_ranges" only when specifying multiple ports
 
         source_address_prefixes = [ # # Use "source_address_prefix" for single CIDR/service tag, "source_address_prefixes" for multiple CIDRs/service tags, and "source_application_security_group_ids" for ASG (do not mix them in the same rule)
@@ -23,12 +23,12 @@ locals {
         dest_asg   = null
       },
       {
-        name                   = "allow-http-htttps-from-lb"
-        priority               = 102
-        direction              = "Inbound"
-        access                 = "Allow"
-        protocol               = "Tcp"
-        source_port_range      = "*"
+        name                    = "allow-http-htttps-from-lb"
+        priority                = 102
+        direction               = "Inbound"
+        access                  = "Allow"
+        protocol                = "Tcp"
+        source_port_range       = "*"
         destination_port_ranges = ["80", "443"] # # Use "destination_port_ranges" only when specifying multiple ports
 
         source_address_prefix      = "AzureLoadBalancer" # # Use "source_address_prefix" for single CIDR/service tag, "source_address_prefixes" for multiple CIDRs/service tags, and "source_application_security_group_ids" for ASG (do not mix them in the same rule)
@@ -38,18 +38,18 @@ locals {
         dest_asg   = null
       },
       {
-        name                   = "allow-rdp-ssh"
-        priority               = 103
-        direction              = "Inbound"
-        access                 = "Allow"
-        protocol               = "Tcp"
-        source_port_range      = "*"
+        name                    = "allow-rdp-ssh"
+        priority                = 103
+        direction               = "Inbound"
+        access                  = "Allow"
+        protocol                = "Tcp"
+        source_port_range       = "*"
         destination_port_ranges = ["3389", "22"] # # Use "destination_port_ranges" only when specifying multiple ports
 
-        source_address_prefix   = "10.0.4.0/26"
-                                                   # # Use "source_address_prefix" for single CIDR/service tag, "source_address_prefixes" for multiple CIDRs/service tags, and "source_application_security_group_ids" for ASG (do not mix them in the same rule)
-        
-        destination_address_prefix = "*"                 # Use destination_address_prefix for single CIDR/service tag, destination_address_prefixes for multiple CIDRs/service tags, and destination_application_security_group_ids for ASG (do not mix them in the same rule)
+        source_address_prefix = "10.0.4.0/26"
+        # # Use "source_address_prefix" for single CIDR/service tag, "source_address_prefixes" for multiple CIDRs/service tags, and "source_application_security_group_ids" for ASG (do not mix them in the same rule)
+
+        destination_address_prefix = "*" # Use destination_address_prefix for single CIDR/service tag, destination_address_prefixes for multiple CIDRs/service tags, and destination_application_security_group_ids for ASG (do not mix them in the same rule)
 
         source_asg = null
         dest_asg   = null
@@ -64,7 +64,7 @@ locals {
         destination_port_range = "*"
 
         source_address_prefix      = "*" # Use "source_address_prefix" for single CIDR/service tag, "source_address_prefixes" for multiple CIDRs/service tags, and "source_application_security_group_ids" for ASG (do not mix them in the same rule)
-        destination_address_prefix = "*"                 # Use destination_address_prefix for single CIDR/service tag, destination_address_prefixes for multiple CIDRs/service tags, and destination_application_security_group_ids for ASG (do not mix them in the same rule)
+        destination_address_prefix = "*" # Use destination_address_prefix for single CIDR/service tag, destination_address_prefixes for multiple CIDRs/service tags, and destination_application_security_group_ids for ASG (do not mix them in the same rule)
 
         source_asg = null
         dest_asg   = null

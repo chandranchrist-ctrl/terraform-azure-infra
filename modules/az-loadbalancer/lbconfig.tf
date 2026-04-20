@@ -1,7 +1,7 @@
 locals {
   backend_pools = [
     {
-      name = "lb-backend-pool-nginx"
+      name = "lb-backend-pool"
 
       lb_rules = [
         {
@@ -52,15 +52,9 @@ locals {
       # NAT rules in Load Balancer are used to map specific frontend ports to backend VM ports, enabling direct inbound access (e.g., RDP/SSH) to individual VMs without assigning public IPs
       nat_rules = [
         {
-          name          = "rdp-uat-biztalk-ap1"
+          name          = "rdp-uat-hotel-ap1"
           protocol      = "Tcp"
           frontend_port = 5001
-          backend_port  = 3389
-        },
-        {
-          name          = "rdp-uat-biztalk-ap2"
-          protocol      = "Tcp"
-          frontend_port = 5002
           backend_port  = 3389
         }
       ]

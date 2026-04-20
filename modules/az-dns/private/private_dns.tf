@@ -12,7 +12,7 @@ locals {
   zone_vnet_links = flatten([
     for zone in var.zones : [
       for idx, vnet_id in var.vnet_ids : {
-        key     = "${replace(zone, ".", "-")}-vnet-${idx}"  # static key
+        key     = "${replace(zone, ".", "-")}-vnet-${idx}" # static key
         zone    = zone
         vnet_id = vnet_id
       }

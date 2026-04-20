@@ -41,6 +41,6 @@ variable "asg_map" {
 }
 
 variable "default_outbound_access_enabled" {
-  type        = bool
-  default     = false
+  type    = bool
+  default = false
 }

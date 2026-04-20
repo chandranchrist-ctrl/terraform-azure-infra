@@ -16,8 +16,8 @@ resource "azurerm_network_interface" "nic" {
   tags = var.tags
 
   lifecycle {
-  create_before_destroy = true
-}
+    create_before_destroy = true
+  }
 }
 
 resource "azurerm_application_security_group" "asg" {
@@ -151,8 +151,8 @@ resource "azurerm_linux_virtual_machine" "vm" {
   # }
 
   admin_ssh_key {
-  username   = local.localadmin_creds.admin-username
-  public_key = data.azurerm_key_vault_secret.ssh_public_key.value
+    username   = local.localadmin_creds.admin-username
+    public_key = data.azurerm_key_vault_secret.ssh_public_key.value
   }
 
   # availability_set_id = var.enable_availability_set && length(var.zones) == 0 ? azurerm_availability_set.avset[0].id : null

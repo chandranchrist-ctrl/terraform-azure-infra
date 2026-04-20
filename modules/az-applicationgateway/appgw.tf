@@ -125,13 +125,13 @@ resource "azurerm_application_gateway" "appgw" {
     # }
 
     content {
-  name = backend_address_pool.value.name
+      name = backend_address_pool.value.name
 
-  #AUTO INJECTION LOGIC
-  ip_addresses = length(lookup(backend_address_pool.value, "ip_addresses", [])) > 0 ? backend_address_pool.value.ip_addresses : var.backend_ips
+      #AUTO INJECTION LOGIC
+      ip_addresses = length(lookup(backend_address_pool.value, "ip_addresses", [])) > 0 ? backend_address_pool.value.ip_addresses : var.backend_ips
 
-  fqdns = lookup(backend_address_pool.value, "fqdns", [])
-}
+      fqdns = lookup(backend_address_pool.value, "fqdns", [])
+    }
   }
 
   dynamic "backend_http_settings" {

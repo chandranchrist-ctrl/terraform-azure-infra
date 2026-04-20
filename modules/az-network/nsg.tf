@@ -65,24 +65,24 @@ resource "azurerm_network_security_rule" "nsg_rule" {
   access    = each.value.rule.access
   protocol  = each.value.rule.protocol
 
-  source_port_range      = each.value.rule.source_port_range
- /*  destination_port_range = each.value.rule.destination_port_range */
+  source_port_range = each.value.rule.source_port_range
+  /*  destination_port_range = each.value.rule.destination_port_range */
 
-/*   destination_port_range  = try(each.value.rule.destination_port_range, null)
+  /*   destination_port_range  = try(each.value.rule.destination_port_range, null)
   destination_port_ranges = try(each.value.rule.destination_port_ranges, null) */
 
   destination_port_range = (
-  can(each.value.rule.destination_port_range) && 
-  !can(each.value.rule.destination_port_ranges)
-  ? each.value.rule.destination_port_range
-  : null
-)
+    can(each.value.rule.destination_port_range) &&
+    !can(each.value.rule.destination_port_ranges)
+    ? each.value.rule.destination_port_range
+    : null
+  )
 
-destination_port_ranges = (
-  can(each.value.rule.destination_port_ranges)
-  ? each.value.rule.destination_port_ranges
-  : null
-)
+  destination_port_ranges = (
+    can(each.value.rule.destination_port_ranges)
+    ? each.value.rule.destination_port_ranges
+    : null
+  )
 
   ########################################
   # CIDR OR SERVICE TAG SUPPORT

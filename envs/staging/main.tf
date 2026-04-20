@@ -27,7 +27,7 @@ terraform {
 
 provider "azurerm" {
   features {}
-  subscription_id = var.subscription_id       # "96d47cac-de1c-4194-83f4-74e2d25bcf45" /* change manually when needed */
+  subscription_id = var.subscription_id # "96d47cac-de1c-4194-83f4-74e2d25bcf45" /* change manually when needed */
 }
 
 locals {
@@ -142,7 +142,7 @@ module "storage_account" {
   source = "../../modules/az-storage"
 
   # storage_account_name = var.storage_account_name       # "${local.env}storageaccdiag16" /* Storage Account names must be globally unique across Azure. */
-  for_each = var.storage_accounts 
+  for_each             = var.storage_accounts
   storage_account_name = each.value
 
   location            = module.rg.resource_group_location
@@ -185,7 +185,7 @@ module "storage_account" {
 module "sql_logs_storage_account" {
   source = "../../modules/az-storage"
 
-  storage_account_name = var.sql_logs_storage_account_name         # "${local.env}storageaccsqllogs06"
+  storage_account_name = var.sql_logs_storage_account_name # "${local.env}storageaccsqllogs06"
 
   location            = module.rg.resource_group_location
   resource_group_name = module.rg.resource_group_name
@@ -244,7 +244,7 @@ module "sql_logs_storage_account" {
 module "key_vault" {
   source = "../../modules/az-keyvault"
 
-  name = var.key_vault_name       # "${local.env}-${local.workload}-kv-17" /* Key Vault names must be globally unique across Azure. */
+  name = var.key_vault_name # "${local.env}-${local.workload}-kv-17" /* Key Vault names must be globally unique across Azure. */
 
   location            = module.rg.resource_group_location
   resource_group_name = module.rg.resource_group_name
@@ -298,7 +298,7 @@ module "key_vault" {
   ]
 
   # Diagnostics Settings Inputs
-  audit_storage_account_name = module.storage_account["sa1"].storage_account_name    /* Ex. "kvlogstorage" to declare the name directly */
+  audit_storage_account_name = module.storage_account["sa1"].storage_account_name /* Ex. "kvlogstorage" to declare the name directly */
   audit_storage_account_rg   = module.rg.resource_group_name
 
   depends_on = [module.storage_account]
@@ -391,7 +391,7 @@ module "fw_policy" {
 
   firewall_public_ip = module.firewall.firewall_pip
 
-      vm_private_ips = flatten([
+  vm_private_ips = flatten([
     # module.linux_vm.private_ip,
     module.windows_vm.private_ip
   ])
@@ -455,7 +455,7 @@ module "windows_vm" {
   zones = null # Sample: ["1", "2", "3"] or null
 
   enable_boot_diagnostics               = true
-  boot_diagnostics_mode                 = "existing"                                  # "none", "existing", or "create"
+  boot_diagnostics_mode                 = "existing"                                         # "none", "existing", or "create"
   boot_diagnostics_storage_account_name = module.storage_account["sa1"].storage_account_name # "uatbiztalkdiag"
 
 
@@ -502,7 +502,7 @@ module "windows_vm" {
 module "linux_vm" {
   source = "../../modules/az-compute/linux_vm"
 
-  env = local.env
+  env      = local.env
   workload = local.workload
 
   resource_group_name = module.rg.resource_group_name
@@ -512,7 +512,7 @@ module "linux_vm" {
   vm_name  = "${local.env}-nginx-lnx"
   vm_count = 1
 
-  vm_size  = "Standard_B2s"
+  vm_size   = "Standard_B2s"
   image_sku = "18.04-LTS"
 
   subnet_id = module.virtual_network.subnet_lookup["app"]
@@ -531,8 +531,8 @@ module "linux_vm" {
   zones = null # Sample: ["1", "2", "3"] or null
 
   enable_boot_diagnostics               = true
-  boot_diagnostics_mode                 = "existing" # "none", "existing", or "create"
-  boot_diagnostics_storage_account_name =  module.storage_account["sa1"].storage_account_name          # "uatbiztalkdiag"
+  boot_diagnostics_mode                 = "existing"                                         # "none", "existing", or "create"
+  boot_diagnostics_storage_account_name = module.storage_account["sa1"].storage_account_name # "uatbiztalkdiag"
 
   # 🔐 KEY VAULT INPUTS (NEW)
   key_vault_id = module.key_vault.key_vault_id # change manually when needed; ensure this KV exists and has the necessary secrets for admin username and password
@@ -564,18 +564,18 @@ module "linux_vm" {
   #   }
   # ]
 
-    # Backup
+  # Backup
   enable_backup = false
 
   # Recovery Serivce Vault Configuration
   recovery_services_vault_name = "existing-rsv"
-  backup_policy_vm  = "existing-policy"
+  backup_policy_vm             = "existing-policy"
 
-    # Depends
+  # Depends
   depends_on = [
-  module.key_vault,
-  module.storage_account
-]
+    module.key_vault,
+    module.storage_account
+  ]
 }
 
 module "mssql" {
@@ -619,7 +619,7 @@ module "mssql" {
 
   # Service Endpoint
   enable_service_endpoint_mssql = true
-  app_subnet_id = module.virtual_network.subnet_lookup["app"]
+  app_subnet_id                 = module.virtual_network.subnet_lookup["app"]
 
   allowed_ips = ["49.37.211.249"] # only used if public enabled
 
@@ -753,11 +753,11 @@ module "appgw" {
 
   # common_listener_name = "${local.env}-common-listener"
 
-    # DIRECT PASS (NO locals block required)
-backend_ips = flatten([
-  # module.linux_vm.private_ip
-  module.windows_vm.private_ip
-])
+  # DIRECT PASS (NO locals block required)
+  backend_ips = flatten([
+    # module.linux_vm.private_ip
+    module.windows_vm.private_ip
+  ])
 
 
   depends_on = [
