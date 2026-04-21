@@ -76,7 +76,9 @@ terraform-azure-infra/
     ├── private_dns/
     └── vnet_peering/
 
-## 🧩 Module Breakdown
+---
+
+## Module Breakdown
 
 This section explains the role of each Terraform module in the overall Azure architecture.
 
