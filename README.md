@@ -218,14 +218,12 @@ Get-ChildItem -Recurse -File | ForEach-Object {
 
 This architecture follows a multi-layer security approach:
 
-🔑 Azure Key Vault for centralized secret management
-🌐 Azure Firewall for traffic inspection and control
-🛑 NSG rules for subnet-level security enforcement
-🔒 Private Endpoints for MSSQL isolation from public internet
-📊 Diagnostic logging for monitoring and auditing
-💾 Backup using Recovery Services Vault
-🔐 Transparent Data Encryption (TDE) for SQL Server
-🚨 Vulnerability assessment enabled for database security
+1. 🔑 Azure Key Vault for centralized secret management
+2. 🌐 Azure Firewall for traffic inspection and control
+3. 🛑 NSG rules for subnet-level security enforcement
+4. 🔒 Private Endpoints for MSSQL isolation from public internet
+5. 📊 Diagnostic logging for monitoring and auditing
+6. 🔐 Transparent Data Encryption (TDE) for SQL Server
 
 ---
 
