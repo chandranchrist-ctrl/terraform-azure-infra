@@ -1,4 +1,4 @@
-# 🚀 Project 1: Modular and Secure Azure Hub-and-Spoke Architecture with Application Gateway, Firewall, and MSSQL (Terraform)
+# 🚀 Modular and Secure Azure Hub-and-Spoke Architecture with Application Gateway, Firewall, and MSSQL (Terraform)
 
 ## 📌 Overview
 
@@ -49,40 +49,36 @@ Includes:
 
 ---
 
+
 ## 📁 Folder Structure
 
-```bash
-terraform-azure-infra/
-│
-├── LICENSE
-│
-├── envs/
-│   └── staging/
-│       └── main.tf   # Root deployment entry point
-│
-└── modules/
-    ├── virtual_network/
-    ├── firewall/
-    ├── fw_policy/
-    ├── appgw/
-    ├── linux_vm/
-    ├── windows_vm/
-    ├── mssql/
-    ├── key_vault/
-    ├── storage_account/
-    ├── sql_logs_storage_account/
-    ├── bastion/
-    ├── route_tables/
-    ├── private_dns/
-    └── vnet_peering/
+terraform-azure-infra
+
+- envs                -> Root Module
+  - staging
+    - main.tf   (Root deployment entry point)
+
+- modules                -> submodule
+  - virtual_network
+  - firewall
+  - fw_policy
+  - appgw
+  - linux_vm
+  - windows_vm
+  - mssql
+  - key_vault
+  - storage_account
+  - sql_logs_storage_account
+  - bastion
+  - route_tables
+  - private_dns
+  - vnet_peering
 
 ---
 
-## 🧩 **Module Breakdown**
+## 🧩 Module Breakdown
 
 This section explains the role of each Terraform module in the overall Azure architecture.
-
----
 
 ## 🌐 Network Layer
 
@@ -94,8 +90,6 @@ This layer forms the foundation of the architecture and controls all network con
 - **Route Tables** – Defines custom routing paths, typically through Azure Firewall for traffic inspection  
 - **VNet Peering** – Enables secure communication between multiple virtual networks  
 
----
-
 ## 🔐 Security Layer
 
 This layer ensures centralized security control, identity protection, and secure traffic inspection across the architecture.
@@ -104,8 +98,6 @@ This layer ensures centralized security control, identity protection, and secure
 - **Key Vault (Secrets, Keys, Certificates)** – Secure storage for credentials, encryption keys, and certificates  
 - **Private DNS Zones** – Enables secure name resolution for private endpoints within the virtual network  
 - **Diagnostic Settings** – Collects logs and telemetry for monitoring, auditing, and compliance  
-
----
 
 ## 🖥️ Compute Layer
 
@@ -117,8 +109,6 @@ This layer hosts the application workloads and virtual machines.
 - **Availability Sets** – Ensures high availability and fault tolerance for virtual machines  
 - **Application Security Groups (ASG)** – Logical grouping of VMs for simplified network security rule management  
 
----
-
 ## 🗄️ Data Layer
 
 This layer manages database services and secure data storage.
@@ -129,7 +119,6 @@ This layer manages database services and secure data storage.
 - **Private Endpoint Integration** – Ensures secure, private connectivity to SQL Server  
 - **Auditing & Vulnerability Assessment** – Provides security monitoring and compliance checks for databases  
 
----
 
 ## 🌍 Application Layer
 
@@ -139,7 +128,6 @@ This layer manages traffic distribution and application routing.
 - **Backend VM Integration** – Connects application gateway to virtual machine backend pool  
 - **Load Balancer (existing/integrated)** – Handles internal traffic distribution where applicable  
 
----
 
 ## 💾 Storage Layer
 
@@ -149,26 +137,22 @@ This layer provides persistent storage and log management.
 - **Blob Containers** – Object storage for unstructured data  
 - **Lifecycle Management Policies** – Automates data retention, archiving, and cleanup  
 
----
-
 ## 🛠️ Management Layer
 
 This layer provides operational support, monitoring, and secure access to resources.
 
 - **Azure Bastion Host** – Secure access to virtual machines without exposing public IPs  
 - **Recovery Services Vault (Backup)** – Manages backup and restore operations for virtual machines  
-- **Monitoring & Diagnostic Settings** – Centralized logging, monitoring, and alerting for infrastructure health  
+- **Monitoring & Diagnostic Settings** – Centralized logging, monitoring, and alerting for infrastructure health
+
+---
 
 ## ⚙️ Terraform Concepts Used
 
 This project leverages multiple Terraform features to ensure modularity, scalability, and dynamic infrastructure provisioning.
 
----
-
 ### ✔ count
 Used for creating multiple instances of similar resources dynamically when duplication is required.
-
----
 
 ### ✔ for_each
 Used for key-value based dynamic resource creation such as:
@@ -176,12 +160,8 @@ Used for key-value based dynamic resource creation such as:
 - Key Vault secrets  
 - Storage containers  
 
----
-
 ### ✔ depends_on
 Used to explicitly control resource creation order where Azure implicit dependencies are not sufficient.
-
----
 
 ### ✔ dynamic blocks
 Used for flexible and reusable configuration structures such as:
@@ -191,37 +171,50 @@ Used for flexible and reusable configuration structures such as:
 
 ---
 
-🧪 Terraform Deployment Commands
+## 🧪 Terraform Deployment Commands
 
-terraform init -reconfigure - Initializes Terraform working directory and reconfigures backend settings.
-terraform init -migrate-state - Migrates Terraform state when backend configuration changes.
-terraform plan -out=tfplan-rg - Creates an execution plan and saves it for controlled deployment.
-terraform apply tfplan - Applies the saved execution plan.
-terraform graph > graph.dot - Generates infrastructure dependency graph (used for visualization and architecture understanding).
+- `terraform init -reconfigure`  
+  Initializes Terraform working directory and reconfigures backend settings.
 
-🧰 PowerShell Automation Used
+- `terraform init -migrate-state`  
+  Migrates Terraform state when backend configuration changes.
+
+- `terraform plan -out=tfplan-rg`  
+  Creates an execution plan and saves it for controlled deployment.
+
+- `terraform apply tfplan`  
+  Applies the saved execution plan.
+
+- `terraform graph > graph.dot`  
+  Generates infrastructure dependency graph for visualization and architecture understanding.
+
+---
+
+## 🧰 PowerShell Automation Used
 
 📌 Combine all Terraform files into a single document
 
-$out='combined.txt'
+`$out='combined.txt'
 Remove-Item $out -ErrorAction SilentlyContinue
 Get-ChildItem *.tf | ForEach-Object {
     Add-Content $out ('===== ' + $_.Name + ' =====')
     Add-Content $out (Get-Content $_ -Raw)
     Add-Content $out ''
-}
+}`
 
 📌 Recursive full project export
 
-$out='combined.txt'
+`$out='combined.txt'
 Remove-Item $out -ErrorAction SilentlyContinue
 Get-ChildItem -Recurse -File | ForEach-Object {
     Add-Content $out ('===== ' + $_.FullName + ' =====')
     Add-Content $out (Get-Content $_.FullName -Raw)
     Add-Content $out ''
-}
+}`
 
-🔐 Security Implementation
+---
+
+## 🔐 Security Implementation
 
 This architecture follows a multi-layer security approach:
 
@@ -234,7 +227,9 @@ This architecture follows a multi-layer security approach:
 🔐 Transparent Data Encryption (TDE) for SQL Server
 🚨 Vulnerability assessment enabled for database security
 
-🧩 Optional Components
+---
+
+## 🧩 Optional Components
 
 This architecture can be extended with:
 
@@ -242,7 +237,9 @@ This architecture can be extended with:
 2. MySQL database integration
 3. Azure Firewall Classic Rules (alternative to policy-based rules)
 
-🚀 Key Design Principles
+---
+
+## 🚀 Key Design Principles
 
 1. Modular Terraform architecture using reusable modules
 2. Separation of concerns between network, compute, and data layers
@@ -250,7 +247,9 @@ This architecture can be extended with:
 4. Secure-by-default configuration approach
 5. Scalable infrastructure design for enterprise workloads
 
-📌 Conclusion
+---
+
+## 📌 Conclusion
 
 This project demonstrates a real-world, production-style Azure infrastructure architecture built using Terraform modular design principles.
 
@@ -263,7 +262,9 @@ Key achievements include:
 
 💡 The infrastructure is intentionally designed to be reusable across multiple environments (dev, staging, production) with minimal changes, making it highly efficient for enterprise adoption.
 
-⚠️ Disclaimer
+---
+
+## Important Notes
 1. This project is intended for learning and architectural demonstration purposes
 2. Some resources may incur Azure costs when deployed
 3. Certain configurations may require subscription-level permissions or quotas
