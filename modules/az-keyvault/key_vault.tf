@@ -1,3 +1,4 @@
+# Security - Key Vault
 resource "azurerm_key_vault" "kv" {
   name                = var.name
   location            = var.location
@@ -9,7 +10,7 @@ resource "azurerm_key_vault" "kv" {
   soft_delete_retention_days = var.soft_delete_retention_days
   purge_protection_enabled   = var.purge_protection_enabled
 
-  rbac_authorization_enabled = false
+  rbac_authorization_enabled = var.rbac_authorization_enabled /* false = uses access policies, true = uses RBAC */
 
   enabled_for_deployment          = var.enabled_for_deployment
   enabled_for_template_deployment = var.enabled_for_template_deployment
@@ -17,6 +18,7 @@ resource "azurerm_key_vault" "kv" {
   # Public access (can restrict later using firewall rules)
   public_network_access_enabled = var.public_network_access_enabled
 
+  # Network - Access Rules
   network_acls {
     default_action             = var.network_acls_default_action
     bypass                     = "AzureServices"

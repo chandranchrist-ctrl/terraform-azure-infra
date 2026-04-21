@@ -1,7 +1,4 @@
-# =====================================================
 # BASIC SERVER CONFIGURATION
-# =====================================================
-
 variable "server_name" {
   type = string
 }
@@ -40,10 +37,7 @@ variable "collation" {
   default = "SQL_Latin1_General_CP1_CI_AS"
 }
 
-# =====================================================
 # SECURITY - NETWORK ACCESS
-# =====================================================
-
 variable "enable_public_access" {
   type    = bool
   default = false
@@ -59,10 +53,7 @@ variable "enable_outbound_firewall" {
   default = false
 }
 
-# =====================================================
 # IDENTITY - AZURE AD ADMIN
-# =====================================================
-
 variable "enable_aad_admin" {
   type    = bool
   default = false
@@ -77,10 +68,7 @@ variable "azuread_admin_object_id" {
   default = null
 }
 
-# =====================================================
 # KEY VAULT / SECRETS
-# =====================================================
-
 variable "key_vault_id" {
   type = string
 }
@@ -89,10 +77,7 @@ variable "sql_secret_name" {
   type = string
 }
 
-# =====================================================
 # TRANSPARENT DATA ENCRYPTION (TDE)
-# =====================================================
-
 variable "enable_tde" {
   type    = bool
   default = true
@@ -108,10 +93,7 @@ variable "key_vault_key_id" {
   default = null
 }
 
-# =====================================================
 # AUDITING
-# =====================================================
-
 variable "enable_auditing" {
   type    = bool
   default = false
@@ -127,10 +109,7 @@ variable "audit_retention_days" {
   default = 7
 }
 
-# =====================================================
 # SECURITY ALERTS + VA (DEFENDER)
-# =====================================================
-
 variable "enable_security_alerts" {
   type    = bool
   default = false
@@ -185,10 +164,7 @@ variable "va_storage_key" {
   default = null
 }
 
-# =====================================================
 # BACKUP / LONG TERM RETENTION
-# =====================================================
-
 variable "enable_long_term_retention" {
   type    = bool
   default = false
@@ -219,10 +195,7 @@ variable "short_term_retention_days" {
   default = 7
 }
 
-# =====================================================
 # NETWORKING (PRIVATE ACCESS)
-# =====================================================
-
 variable "enable_private_endpoint" {
   type    = bool
   default = false
@@ -233,10 +206,7 @@ variable "private_subnet_id" {
   default = null
 }
 
-# =====================================================
 # PERFORMANCE / AVAILABILITY
-# =====================================================
-
 variable "zone_redundant" {
   type    = bool
   default = false

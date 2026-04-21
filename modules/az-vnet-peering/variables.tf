@@ -1,3 +1,4 @@
+# Network - VNet Peering
 variable "peerings" {
   description = "Map of VNet peerings to create"
   type = map(object({

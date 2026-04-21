@@ -1,3 +1,5 @@
+/* Network Security - Network Rules (IP/Port based filtering);
+Controls traffic using IPs, ports, and protocols (L3/L4) */
 locals {
   network_rule_collections = [
     {
@@ -7,7 +9,7 @@ locals {
       rules = [
         {
           name                  = "Block-Google-DNS"
-          enabled               = false
+          enabled               = false /* Only creates rules if enabled = true */
           source_addresses      = var.all_vm_cidrs
           destination_addresses = ["8.8.8.8"]
           destination_ports     = ["53"]

@@ -1,3 +1,6 @@
+/* Runs PowerShell script after VM creation
+Example: installs IIS, Telnet */
+
 resource "azurerm_virtual_machine_extension" "vm_init" {
   for_each = toset(local.vm_names)
 

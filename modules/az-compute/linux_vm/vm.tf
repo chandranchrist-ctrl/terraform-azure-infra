@@ -1,3 +1,16 @@
+resource "azurerm_public_ip" "pip" {
+  for_each = var.enable_public_ip ? toset(local.vm_names) : toset([])
+
+  name                = "${each.key}-pip"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+
+  allocation_method = "Static"
+  sku               = "Standard"
+
+  tags = var.tags
+}
+
 resource "azurerm_network_interface" "nic" {
   for_each = toset(local.vm_names)
 
@@ -51,18 +64,7 @@ resource "azurerm_network_interface_backend_address_pool_association" "lb" {
   )
 }
 
-resource "azurerm_public_ip" "pip" {
-  for_each = var.enable_public_ip ? toset(local.vm_names) : toset([])
 
-  name                = "${each.key}-pip"
-  location            = var.location
-  resource_group_name = var.resource_group_name
-
-  allocation_method = "Static"
-  sku               = "Standard"
-
-  tags = var.tags
-}
 
 resource "azurerm_availability_set" "avset" {
   count = var.enable_availability_set ? 1 : 0
@@ -98,13 +100,6 @@ resource "azurerm_storage_account" "diag" {
   account_replication_type = "LRS"
 }
 
-# locals {
-#   vm_zone_map = {
-#     for i, name in local.vm_names :
-#     name => element(var.zones, i % length(var.zones))
-#   }
-# }
-
 locals {
   vm_names = [
     for i in range(var.vm_count) :
@@ -117,10 +112,6 @@ locals {
     for i, name in local.vm_names :
     name => element(local.zones, i % length(local.zones))
   } : {}
-
-
-  # use_ssh      = var.auth_mode == "ssh"
-  # use_password = var.auth_mode == "password"
 }
 
 resource "azurerm_linux_virtual_machine" "vm" {
@@ -132,41 +123,35 @@ resource "azurerm_linux_virtual_machine" "vm" {
   resource_group_name = var.resource_group_name
   size                = var.vm_size
 
+  # Attach NIC
   network_interface_ids = [
     azurerm_network_interface.nic[each.key].id
   ]
 
+  # Authentication control
   disable_password_authentication = var.disable_password_authentication
 
+  # Admin credentials (fetched from Key Vault)
   admin_username = local.localadmin_creds.admin-username
   admin_password = local.localadmin_creds.admin-password
 
-  # dynamic "admin_ssh_key" {
-  #   for_each = local.use_ssh ? [1] : []
-
-  #   content {
-  #     username   = local.localadmin_creds.admin-username
-  #     public_key = data.azurerm_key_vault_secret.ssh_public_key.value
-  #   }
-  # }
-
+  # SSH Key authentication (recommended)
   admin_ssh_key {
     username   = local.localadmin_creds.admin-username
     public_key = data.azurerm_key_vault_secret.ssh_public_key.value
   }
 
-  # availability_set_id = var.enable_availability_set && length(var.zones) == 0 ? azurerm_availability_set.avset[0].id : null
-
+  # Availability configuration
   availability_set_id = (
     var.enable_availability_set && length(local.zones) == 0
     ? azurerm_availability_set.avset[0].id
     : null
   )
 
-  # zone = length(var.zones) > 0 ? element(var.zones, index(local.vm_names, each.key) % length(var.zones)) : null
-  # zone = length(var.zones) > 0 ? local.vm_zone_map[each.key] : null
+  # Zone-based deployment (if provided)
   zone = length(local.zones) > 0 ? local.vm_zone_map[each.key] : null
 
+  # OS Disk
   os_disk {
     name                 = "${each.key}-osdisk"
     caching              = "ReadWrite"
@@ -174,6 +159,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
     disk_size_gb         = var.os_disk_size_gb
   }
 
+  # Image reference (Ubuntu)
   source_image_reference {
     publisher = "Canonical"
     offer     = "UbuntuServer"
@@ -181,6 +167,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
     version   = "latest"
   }
 
+  # Boot diagnostics configuration
   boot_diagnostics {
     storage_account_uri = local.use_boot_diag ? (
       local.use_existing_sa
@@ -189,10 +176,15 @@ resource "azurerm_linux_virtual_machine" "vm" {
     ) : null
   }
 
+  # Managed Identity (used for accessing Key Vault, etc.)
   identity {
     type = "SystemAssigned"
   }
 
+  # Cloud-init script (runs at VM startup)
+
+  /*  Passes initialization script to VM
+      Used to install software, configure services during first boot */
   custom_data = base64encode(templatefile("${path.module}/cloud-init.tpl", {
     hostname = each.key
   }))
@@ -200,6 +192,8 @@ resource "azurerm_linux_virtual_machine" "vm" {
   tags = var.tags
 }
 
+
+# Creates mapping between VM and disks using LUN
 locals {
   data_disks = {
     for pair in setproduct(local.vm_names, var.data_disks) :
@@ -210,6 +204,7 @@ locals {
   }
 }
 
+# Attaches managed disk to VM using LUN
 resource "azurerm_managed_disk" "data_disk" {
   for_each = local.data_disks
 
@@ -221,7 +216,6 @@ resource "azurerm_managed_disk" "data_disk" {
   create_option        = "Empty"
   disk_size_gb         = each.value.disk.size_gb
 
-  # zone = length(var.zones) > 0 ? local.vm_zone_map[each.value.vm] : null
   zone = length(local.zones) > 0 ? local.vm_zone_map[each.value.vm] : null
 }
 

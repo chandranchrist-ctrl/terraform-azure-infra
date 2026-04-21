@@ -1,3 +1,8 @@
+/* Imports certificates (PFX) into Key Vault;
+for_each = creates one certificate per item in var.certificates;
+Use when certificates are already generated and need to be stored securely in Key Vault */
+
+# Security - Certificates
 resource "azurerm_key_vault_certificate" "cert" {
   for_each = { for c in var.certificates : c.name => c }
 
@@ -14,31 +19,35 @@ resource "azurerm_key_vault_certificate" "cert" {
   ]
 }
 
-# certificate_policy {
-#   issuer_parameters {
-#     name = "Self"
-#   }
+/* Defines how certificates are generated within Key Vault (self-signed or via issuer)
+Use when creating certificates directly in Key Vault instead of importing PFX files
+Not needed when certificates are already available and imported using pfx_path */
 
-#   key_properties {
-#     exportable = true
-#     key_size   = 2048
-#     key_type   = "RSA"
-#     reuse_key  = true
-#   }
+/* certificate_policy {
+  issuer_parameters {
+    name = "Self"
+  }
 
-#   secret_properties {
-#     content_type = "application/x-pkcs12"
-#   }
+  key_properties {
+    exportable = true
+    key_size   = 2048
+    key_type   = "RSA"
+    reuse_key  = true
+  }
 
-#   x509_certificate_properties {
-#     subject            = "CN=${each.value.name}"
-#     validity_in_months = 12
+  secret_properties {
+    content_type = "application/x-pkcs12"
+  }
 
-#     # ✅ REQUIRED FIX
-#     key_usage = [
-#       "digitalSignature",
-#       "keyEncipherment"
-#        ]
-#      }
-#    }
-# }
+  x509_certificate_properties {
+    subject            = "CN=${each.value.name}"
+    validity_in_months = 12
+
+    key_usage = [
+      "digitalSignature",
+      "keyEncipherment"
+       ]
+     }
+   }
+} 
+*/

@@ -1,3 +1,4 @@
+# Storage - Containers
 resource "azurerm_storage_container" "containers" {
   for_each = toset(var.containers)
 

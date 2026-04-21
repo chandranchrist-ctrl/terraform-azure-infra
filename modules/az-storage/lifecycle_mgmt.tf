@@ -1,3 +1,9 @@
+# Storage - Lifecycle Management
+
+/* Lifecycle management automatically deletes/archives blobs based on rules
+dynamic "rule" allows creating multiple lifecycle rules from input (var.lifecycle_rules)
+empty list = no rules created, list provided = rules applied to matching blobs */
+
 resource "azurerm_storage_management_policy" "this" {
   count = length(var.lifecycle_rules) > 0 ? 1 : 0
 

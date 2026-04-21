@@ -1,3 +1,4 @@
+# Network - VNet Peering
 resource "azurerm_virtual_network_peering" "vnet_peering" {
   for_each = var.peerings
 

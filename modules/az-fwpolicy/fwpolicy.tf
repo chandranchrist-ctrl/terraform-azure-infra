@@ -1,3 +1,4 @@
+# Network Security - Firewall Policy
 resource "azurerm_firewall_policy" "fwpolicy" {
   name                = "${var.env}-fwpolicy"
   location            = var.location
@@ -7,14 +8,13 @@ resource "azurerm_firewall_policy" "fwpolicy" {
   sku = var.sku
 }
 
+# Network Security - Rule Collection Group
+/* contains network, application, and NAT rules */
 resource "azurerm_firewall_policy_rule_collection_group" "main" {
   name               = "${var.env}-fw-rcg"
   firewall_policy_id = azurerm_firewall_policy.fwpolicy.id
   priority           = 100
 
-  ##################################
-  # NETWORK RULE COLLECTIONS
-  ##################################
   dynamic "network_rule_collection" {
     for_each = [
       for c in local.network_rule_collections :
@@ -42,9 +42,6 @@ resource "azurerm_firewall_policy_rule_collection_group" "main" {
     }
   }
 
-  ##################################
-  # APPLICATION RULE COLLECTIONS
-  ##################################
   dynamic "application_rule_collection" {
     for_each = [
       for c in local.application_rule_collections :
@@ -81,9 +78,6 @@ resource "azurerm_firewall_policy_rule_collection_group" "main" {
     }
   }
 
-  ##################################
-  # NAT RULE COLLECTIONS
-  ##################################
   dynamic "nat_rule_collection" {
     for_each = [
       for c in local.nat_rule_collections :
@@ -105,12 +99,9 @@ resource "azurerm_firewall_policy_rule_collection_group" "main" {
           source_addresses    = rule.value.source_addresses
           destination_address = rule.value.destination_address
           destination_ports   = rule.value.destination_ports
-          # translated_address  = rule.value.translated_address
-
-          translated_address = length(var.vm_private_ips) > 0 ? var.vm_private_ips[0] : null
-
-          translated_port = rule.value.translated_port
-          protocols       = rule.value.protocols
+          translated_address  = length(var.vm_private_ips) > 0 ? var.vm_private_ips[0] : null
+          translated_port     = rule.value.translated_port
+          protocols           = rule.value.protocols
         }
       }
     }

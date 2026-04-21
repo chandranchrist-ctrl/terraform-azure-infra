@@ -1,3 +1,4 @@
+# Storage - Network Rules
 resource "azurerm_storage_account_network_rules" "storage_network_rules" {
   storage_account_id = azurerm_storage_account.storage_account.id
 
@@ -8,6 +9,7 @@ resource "azurerm_storage_account_network_rules" "storage_network_rules" {
   ip_rules                   = var.allowed_ip_rules
 }
 
+# Storage - Storage Account
 resource "azurerm_storage_account" "storage_account" {
   name                = var.storage_account_name
   resource_group_name = var.resource_group_name
@@ -22,9 +24,7 @@ resource "azurerm_storage_account" "storage_account" {
 
   allow_nested_items_to_be_public = false
 
-  # ---------------------------
-  # BLOB PROPERTIES (versioning + retention)
-  # ---------------------------
+  # Blob Properties (versioning + retention)
   blob_properties {
 
     versioning_enabled = var.blob_versioning_enabled
@@ -38,24 +38,5 @@ resource "azurerm_storage_account" "storage_account" {
     }
   }
 
-  # ---------------------------
-  # IMMUTABILITY (WORM compliance)
-  # ---------------------------
-  #   immutability_policy {
-  #     allow_protected_append_writes = true
-  #     state                         = "Unlocked"
-  #     period_since_creation_in_days = var.immutability_period_days
-  #   }
-
   tags = var.tags
 }
-
-
-/*
-What is blob and container in Azure Storage?
-
-You can say:
-
-A container is a logical grouping of blobs inside a storage account, similar to a folder.
-A blob is the actual data object stored inside a container, such as logs, images, or files.
-*/

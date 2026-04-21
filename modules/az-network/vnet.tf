@@ -1,3 +1,4 @@
+# Network - Virtual Network
 resource "azurerm_virtual_network" "vnet" {
   for_each = var.vnet_address_space
 

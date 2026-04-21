@@ -20,7 +20,7 @@ resource "azurerm_public_ip" "fwmgmtpip" {
   sku                 = var.sku
 }
 
-# Pick subnets automatically
+# Subnet Mapping
 locals {
   subnet_firewall_id   = var.firewall_subnet_id
   subnet_management_id = var.firewall_management_subnet_id
@@ -35,7 +35,7 @@ resource "azurerm_firewall" "fw" {
   sku_tier            = var.sku_tier
   zones               = var.zones
 
-  firewall_policy_id = var.firewall_policy_id
+  firewall_policy_id = var.firewall_policy_id /* required for Standard/Premium */
 
   # Firewall IP Configuration
   ip_configuration {

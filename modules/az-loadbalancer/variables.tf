@@ -1,3 +1,4 @@
+# Core
 variable "env" {
   description = "Prefix for route table names"
   type        = string
@@ -23,6 +24,8 @@ variable "tags" {
   default     = {}
 }
 
+
+# lb Configuration
 variable "lb_name" {
   type = string
 }

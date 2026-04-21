@@ -6,6 +6,7 @@ data "azurerm_storage_account" "diag" {
   resource_group_name = var.resource_group_name
 }
 
+
 data "azurerm_key_vault_secret" "localadmin_credentials" {
   name         = var.localadmin_credentials_secret_name
   key_vault_id = var.key_vault_id
@@ -15,15 +16,12 @@ locals {
   localadmin_creds = jsondecode(data.azurerm_key_vault_secret.localadmin_credentials.value)
 }
 
-# data "azurerm_key_vault" "kv" {
-#   name                = var.key_vault_name
-#   resource_group_name = var.key_vault_rg
-# }
-
+# Fetch SSH public key from Key Vault
 data "azurerm_key_vault_secret" "ssh_public_key" {
   name         = var.ssh_public_key_secret_name
   key_vault_id = var.key_vault_id
 }
+
 
 # Data for backup & recovery serivce vault
 data "azurerm_recovery_services_vault" "vault" {
@@ -40,6 +38,7 @@ data "azurerm_backup_policy_vm" "policy" {
   recovery_vault_name = data.azurerm_recovery_services_vault.vault[0].name
   resource_group_name = data.azurerm_recovery_services_vault.vault[0].resource_group_name
 }
+
 
 data "azurerm_lb" "existing" {
   count = var.enable_lb && var.lb_backend_pool_id == null && var.lb_name != null ? 1 : 0
@@ -68,7 +67,3 @@ locals {
     )
   )
 }
-
-# locals {
-#   lb_enabled = var.enable_lb && var.lb_backend_pool_id != null
-# }

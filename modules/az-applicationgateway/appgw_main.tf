@@ -32,10 +32,10 @@ locals {
   all_configs = [
 
     /*
-Note: 
-1. Need to update here as well whenever adding new routing configurations for different applications. 
-2. This is the list of all routing configurations that will be evaluated to determine which ones are active and should be included in the Application Gateway configuration.
-*/
+    Note: 
+    1. Need to update here as well whenever adding new routing configurations for different applications. 
+    2. This is the list of all routing configurations that will be evaluated to determine which ones are active and should be included in the Application Gateway configuration.
+    */
 
     # Biztalk UAT
     module.uat-hotel.basic_routing,
@@ -60,13 +60,14 @@ Note:
   #   ssl_cert_password = var.ssl_cert_password
   # }  
 
-  active_configs = [for c in local.all_configs : c if c != null && try(c.enabled, false) && !try(c.skip_in_tf, false)] # Filter the configurations to include only those that are enabled and not marked to be skipped in Terraform. This allows you to easily toggle routing configurations on and off without removing them from the code.
+  /* Filter the configurations to include only those that are enabled and not marked to be skipped in Terraform. 
+  This allows you to easily toggle routing configurations on and off without removing them from the code. */
+  active_configs = [for c in local.all_configs : c if c != null && try(c.enabled, false) && !try(c.skip_in_tf, false)]
 
 
-  # Aggregate all the active routing configurations into a single configuration that can be used to define the Application Gateway resource. This combines the backend pools, listeners, HTTP settings, probes, routing rules, redirects, and URL path maps from all active configurations into a single structure.
-
+  /* Aggregate all the active routing configurations into a single configuration that can be used to define the Application Gateway resource. 
+  This combines the backend pools, listeners, HTTP settings, probes, routing rules, redirects, and URL path maps from all active configurations into a single structure. */
   backend_pools = flatten([for c in local.active_configs : lookup(c, "backend_pools", [])])
-  # listeners     = flatten([for c in local.active_configs : lookup(c, "listeners", [])])
 
   listeners = concat(local.common_listeners, flatten([for c in local.active_configs : lookup(c, "listeners", [])]))
 
@@ -77,6 +78,8 @@ Note:
   url_path_maps = flatten([for c in local.active_configs : lookup(c, "url_path_maps", [])])
 }
 
+/* Output the list of all routing configurations for reference. 
+This can be useful for debugging and verification purposes to see which configurations are active and included in the final Application Gateway configuration. */
 output "all_appgw_config" {
-  value = local.all_configs # Output the list of all routing configurations for reference. This can be useful for debugging and verification purposes to see which configurations are active and included in the final Application Gateway configuration.
+  value = local.all_configs
 }

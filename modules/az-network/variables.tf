@@ -1,3 +1,4 @@
+# Core
 variable "env" {
   type = string
 }
@@ -35,12 +36,15 @@ variable "subnet_address_space" {
   })))
 }
 
+# Network - Subnet Settings
+variable "default_outbound_access_enabled" {
+  type    = bool
+  default = false
+}
+
+# Network - ASG
 variable "asg_map" {
   type    = map(string)
   default = {}
 }
 
-variable "default_outbound_access_enabled" {
-  type    = bool
-  default = false
-}

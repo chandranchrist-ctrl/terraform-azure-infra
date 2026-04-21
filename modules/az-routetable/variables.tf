@@ -1,3 +1,4 @@
+# Core
 variable "env" {
   description = "Prefix for route table names"
   type        = string
@@ -27,6 +28,7 @@ variable "create_rt" {
   default     = true
 }
 
+# Network - Routing
 variable "firewall_ip" {
   description = "Optional firewall private IP for VirtualAppliance routes"
   type        = string

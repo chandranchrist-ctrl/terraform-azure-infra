@@ -1,7 +1,4 @@
-############################################
-# 1. FILTER ONLY WORKLOAD SUBNETS
-############################################
-
+# Network - Workload Subnet Filter
 locals {
   workload_subnets = {
     for k, v in local.subnet_map :
@@ -10,10 +7,8 @@ locals {
   }
 }
 
-############################################
-# 2. CREATE NSG PER WORKLOAD SUBNET
-############################################
 
+# Create NSG per workload subnet
 resource "azurerm_network_security_group" "nsg" {
   for_each = local.workload_subnets
 
@@ -24,10 +19,8 @@ resource "azurerm_network_security_group" "nsg" {
   tags                = var.tags
 }
 
-############################################
-# 3. ASSOCIATE NSG TO SUBNET
-############################################
 
+# Associate NSG to Subnet
 resource "azurerm_subnet_network_security_group_association" "nsg_assoc" {
   for_each = local.workload_subnets
 
@@ -36,10 +29,8 @@ resource "azurerm_subnet_network_security_group_association" "nsg_assoc" {
   network_security_group_id = azurerm_network_security_group.nsg[each.key].id
 }
 
-############################################
-# 4. FLATTEN NSG RULES
-############################################
 
+# Flatten NSG Rules
 locals {
   nsg_rules_flat = merge([
     for subnet_key, rules in local.nsg_rules : {
@@ -52,10 +43,8 @@ locals {
   ]...)
 }
 
-############################################
-# 5. NSG RULES
-############################################
 
+# NSG Rules
 resource "azurerm_network_security_rule" "nsg_rule" {
   for_each = local.nsg_rules_flat
 
@@ -66,10 +55,6 @@ resource "azurerm_network_security_rule" "nsg_rule" {
   protocol  = each.value.rule.protocol
 
   source_port_range = each.value.rule.source_port_range
-  /*  destination_port_range = each.value.rule.destination_port_range */
-
-  /*   destination_port_range  = try(each.value.rule.destination_port_range, null)
-  destination_port_ranges = try(each.value.rule.destination_port_ranges, null) */
 
   destination_port_range = (
     can(each.value.rule.destination_port_range) &&
@@ -84,18 +69,15 @@ resource "azurerm_network_security_rule" "nsg_rule" {
     : null
   )
 
-  ########################################
-  # CIDR OR SERVICE TAG SUPPORT
-  ########################################
+  # CIDR OR Service Tag Support
   source_address_prefix      = try(each.value.rule.source_address_prefix, null)
   destination_address_prefix = try(each.value.rule.destination_address_prefix, null)
 
   source_address_prefixes      = try(each.value.rule.source_address_prefixes, null)
   destination_address_prefixes = try(each.value.rule.destination_address_prefixes, null)
 
-  ########################################
-  # ASG SUPPORT (SOURCE)
-  ########################################
+
+  # ASG Support (Source)
   source_application_security_group_ids = (
     try(each.value.rule.source_asg, null) != null && each.value.rule.source_asg != ""
     && contains(keys(var.asg_map), each.value.rule.source_asg)
@@ -103,9 +85,8 @@ resource "azurerm_network_security_rule" "nsg_rule" {
     : null
   )
 
-  ########################################
-  # ASG SUPPORT (DESTINATION)
-  ########################################
+
+  # ASG Support (Destination)
   destination_application_security_group_ids = (
     try(each.value.rule.dest_asg, null) != null && each.value.rule.dest_asg != ""
     && contains(keys(var.asg_map), each.value.rule.dest_asg)
@@ -113,27 +94,26 @@ resource "azurerm_network_security_rule" "nsg_rule" {
     : null
   )
 
-  ########################################
-  # META
-  ########################################
+
+  # Metadata
   resource_group_name         = var.resource_group_name
   network_security_group_name = azurerm_network_security_group.nsg[each.value.subnet_key].name
 }
 
 
-# =========================================================
-# APPLICATION SECURITY GROUP (ASG) OVERVIEW
-#
-# ASG is used to group VM NICs logically (not subnets).
-# 
-# NSG rules use ASG instead of IPs to allow secure communication between application tiers.
-#
-# Example flow:
-#   Web ASG  → App ASG (port 8080)
-#   App ASG  → DB ASG  (port 1433)
-#
-# Benefits:
-#   - No dependency on CIDR ranges
-#   - VM scaling does not require NSG changes
-#   - Centralized security rule management
-# =========================================================
+/* =========================================================
+APPLICATION SECURITY GROUP (ASG) OVERVIEW
+
+ASG is used to group VM NICs logically (not subnets).
+
+NSG rules use ASG instead of IPs to allow secure communication between application tiers.
+
+Example flow:
+  Web ASG  → App ASG (port 8080)
+  App ASG  → DB ASG  (port 1433)
+
+Benefits:
+  - No dependency on CIDR ranges
+  - VM scaling does not require NSG changes
+  - Centralized security rule management
+========================================================= */

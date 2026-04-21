@@ -1,4 +1,4 @@
-# OPTIONAL PUBLIC IP (ONLY IF NOT USING FIREWALL IP)
+# Network - Bastion Public IP
 resource "azurerm_public_ip" "bastion_pip" {
   name                = "${var.env}-bastion-pip"
   location            = var.location
@@ -8,6 +8,7 @@ resource "azurerm_public_ip" "bastion_pip" {
   sku               = "Standard"
 }
 
+# Network Security - Bastion Host
 resource "azurerm_bastion_host" "bastion" {
   name                = "${var.env}-bastion"
   location            = var.location
@@ -23,7 +24,6 @@ resource "azurerm_bastion_host" "bastion" {
 
   zones = var.zones
 
-  # Explicitly disabled (your requirement)
   kerberos_enabled = var.kerberos_enabled
 
   ip_configuration {

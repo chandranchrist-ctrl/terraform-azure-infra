@@ -1,3 +1,4 @@
+# Core
 variable "name" {
   type = string
 }
@@ -10,6 +11,11 @@ variable "resource_group_name" {
   type = string
 }
 
+variable "tags" {
+  type = map(string)
+}
+
+# Security - Key Vault Config
 variable "sku_name" {
   type = string
 }
@@ -30,6 +36,20 @@ variable "enabled_for_template_deployment" {
   type = bool
 }
 
+variable "public_network_access_enabled" {
+  type        = bool
+  description = "Enable or disable public network access to the Key Vault"
+}
+
+variable "network_acls_default_action" {
+  type = string
+}
+
+variable "rbac_authorization_enabled" {
+  type = bool
+}
+
+# Network
 variable "allowed_ip_ranges" {
   type = list(string)
 }
@@ -38,14 +58,7 @@ variable "allowed_subnet_ids" {
   type = list(string)
 }
 
-variable "network_acls_default_action" {
-  type = string
-}
-
-variable "tags" {
-  type = map(string)
-}
-
+# Security - Certificates
 variable "certificates" {
   type = list(object({
     name     = string
@@ -54,10 +67,12 @@ variable "certificates" {
   }))
 }
 
+# Security - Secrets
 variable "secrets" {
   type = map(string)
 }
 
+# Security - SSH
 variable "ssh_public_key" {
   type = string
 }
@@ -67,12 +82,14 @@ variable "ssh_secret_name" {
   default = "linux-ssh-public-key"
 }
 
-
-variable "public_network_access_enabled" {
-  type        = bool
-  description = "Enable or disable public network access to the Key Vault"
+# Security - Key
+variable "tde_key_name" {
+  type    = string
+  default = "sql-tde-key"
 }
 
+
+# Monitoring
 variable "audit_storage_account_name" {
   type = string
 }
@@ -81,11 +98,7 @@ variable "audit_storage_account_rg" {
   type = string
 }
 
-variable "tde_key_name" {
-  type    = string
-  default = "sql-tde-key"
-}
-
+# Access
 variable "create_access_policy_me" {
   description = "Create access policy for current user"
   type        = bool

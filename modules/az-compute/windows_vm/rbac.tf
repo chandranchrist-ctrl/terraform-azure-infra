@@ -1,13 +1,19 @@
 # RBAC acccess to keyvault
-# resource "azurerm_role_assignment" "vm_kv_access" {
-#   for_each = azurerm_windows_virtual_machine.vm
+/* 
+resource "azurerm_role_assignment" "vm_kv_access" {
+  for_each = azurerm_windows_virtual_machine.vm
 
-#   scope                = var.key_vault_id
-#   role_definition_name = "Key Vault Secrets User"
-#   principal_id         = each.value.identity[0].principal_id
-# }
+  scope                = var.key_vault_id
+  role_definition_name = "Key Vault Secrets User"
+  principal_id         = each.value.identity[0].principal_id
+} 
+*/
 
-# Access Policy based access to Keyvault
+# Key Vault Access Policy
+
+/* Grants VM identity access to Key Vault secrets
+Required to fetch credentials securely */
+
 resource "azurerm_key_vault_access_policy" "vm" {
   for_each = azurerm_windows_virtual_machine.vm
 

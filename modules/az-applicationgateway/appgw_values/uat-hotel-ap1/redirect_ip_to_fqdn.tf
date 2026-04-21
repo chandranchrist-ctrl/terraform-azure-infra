@@ -1,31 +1,3 @@
-# appgw_values/biztalk-uat/redirect_ip_to_fqdn.tf
-
-# This file defines the configuration for redirecting IP-based requests to a specific FQDN in the Application Gateway.
-
-/*
-================================================================================
-IP-TO-FQDN LISTENER NOTE
-================================================================================
-
-1. In the IP-to-FQDN routing module, the listener must reference an actual
-   frontend IP configuration and frontend port by their names (e.g., "${var.prefix}-appgw-frontend-ip").
-
-2. Reason:
-   - The dynamic http_listener block in appgw.tf only materializes listeners
-     defined in the module that provides them (e.g., basic_routing, path_based_routing).
-   - IP-to-FQDN is a redirect listener and does not share a listener object from basic_routing.
-   - Therefore, we must provide the existing frontend IP & port names explicitly
-     so that this redirect listener can attach to the correct IP/port without
-     creating a new one.
-
-3. Key point:
-   - This does **not** duplicate the frontend IP or port.
-   - Multiple listeners (basic, path-based, redirect) can use the same frontend IP & port.
-   - By referencing the actual frontend IP & port, the IP-to-FQDN redirect works
-     alongside other routing rules on the same Application Gateway.
-================================================================================
-*/
-
 locals {
   ip_to_fqdn = {
     enabled = true # toggle ON/OFF

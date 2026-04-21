@@ -1,3 +1,4 @@
+# Core
 variable "env" {
   description = "Prefix for route table names"
   type        = string
@@ -19,10 +20,7 @@ variable "tags" {
   default     = {}
 }
 
-# variable "firewall_public_ip_id" {
-#   type = string
-# }
-
+# Bastion Config
 variable "sku" {
   type = string
 }
@@ -52,6 +50,7 @@ variable "kerberos_enabled" {
   type = bool
 }
 
-variable "subnet_id" {
+# Network
+variable "subnet_id" { /* must be AzureBastionSubnet */
   type = string
 }

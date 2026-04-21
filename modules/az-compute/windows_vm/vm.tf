@@ -1,3 +1,19 @@
+resource "azurerm_public_ip" "pip" {
+  for_each = var.enable_public_ip ? toset(local.vm_names) : toset([])
+
+  name                = "${each.key}-pip"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+
+  allocation_method = "Static"
+  sku               = "Standard"
+
+  tags = var.tags
+}
+
+
+/* Creates NIC per VM
+Attaches public IP only if enable_public_ip = true */
 resource "azurerm_network_interface" "nic" {
   for_each = toset(local.vm_names)
 
@@ -12,11 +28,11 @@ resource "azurerm_network_interface" "nic" {
 
     public_ip_address_id = var.enable_public_ip ? azurerm_public_ip.pip[each.key].id : null
   }
-
-
   tags = var.tags
 }
 
+/* Creates Application Security Group per VM;
+Used for NSG rules instead of IP-based rules */
 resource "azurerm_application_security_group" "asg" {
   for_each = var.enable_asg ? toset(local.vm_names) : toset([])
 
@@ -35,16 +51,8 @@ resource "azurerm_network_interface_application_security_group_association" "asg
   application_security_group_id = azurerm_application_security_group.asg[each.key].id
 }
 
-# resource "azurerm_network_interface_backend_address_pool_association" "lb" {
-#   for_each = local.lb_enabled ? azurerm_network_interface.nic : {}
-
-#   network_interface_id  = each.value.id
-#   ip_configuration_name = var.ip_config_name
-
-#   backend_address_pool_id = local.resolved_lb_backend_pool_id
-# }
-
-
+/* Attaches NIC to LB backend pool
+Works with existing or provided backend pool */
 resource "azurerm_network_interface_backend_address_pool_association" "lb" {
   for_each = var.enable_lb ? azurerm_network_interface.nic : {}
 
@@ -58,19 +66,9 @@ resource "azurerm_network_interface_backend_address_pool_association" "lb" {
   )
 }
 
-resource "azurerm_public_ip" "pip" {
-  for_each = var.enable_public_ip ? toset(local.vm_names) : toset([])
 
-  name                = "${each.key}-pip"
-  location            = var.location
-  resource_group_name = var.resource_group_name
-
-  allocation_method = "Static"
-  sku               = "Standard"
-
-  tags = var.tags
-}
-
+/* Groups VMs for high availability (fault + update domains)
+Used only when zones are not configured */
 resource "azurerm_availability_set" "avset" {
   count = var.enable_availability_set ? 1 : 0
 
@@ -85,6 +83,9 @@ resource "azurerm_availability_set" "avset" {
   tags = var.tags
 }
 
+
+/* Creates storage account only if mode = "create"
+Skipped for "existing" or "none" */
 locals {
   use_boot_diag   = var.boot_diagnostics_mode != "none"
   use_existing_sa = var.boot_diagnostics_mode == "existing"
@@ -105,6 +106,8 @@ resource "azurerm_storage_account" "diag" {
   account_replication_type = "LRS"
 }
 
+/* Generates VM names like: vm01, vm02, vm03...
+Based on vm_count */
 locals {
   vm_names = [
     for i in range(var.vm_count) :
@@ -141,8 +144,6 @@ resource "azurerm_windows_virtual_machine" "vm" {
     : null
   )
 
-
-  # zone         = length(var.zones) > 0 ? element(var.zones, index(local.vm_names, each.key) % length(var.zones)) : null
   zone = length(local.zones) > 0 ? local.vm_zone_map[each.key] : null
 
   os_disk {
@@ -169,6 +170,9 @@ resource "azurerm_windows_virtual_machine" "vm" {
     ) : null
   }
 
+
+  /* Enables System Assigned Managed Identity
+Used for accessing Azure services (Key Vault, Storage, etc.) */
   identity {
     type = "SystemAssigned"
   }
@@ -176,6 +180,9 @@ resource "azurerm_windows_virtual_machine" "vm" {
   tags = var.tags
 }
 
+
+/* Creates and attaches data disks to VM
+Supports multiple disks using LUN(Logical Unit Number) mapping - Uniquely identifies each data disk attached to a VM */
 locals {
   data_disks = {
     for pair in setproduct(local.vm_names, var.data_disks) :
@@ -215,6 +222,9 @@ resource "azurerm_virtual_machine_data_disk_attachment" "attach" {
   ]
 }
 
+
+/* Protects VM using Recovery Services Vault
+Created only when enable_backup = true */
 resource "azurerm_backup_protected_vm" "vm_backup" {
   for_each = var.enable_backup ? azurerm_windows_virtual_machine.vm : {}
 

@@ -1,3 +1,4 @@
+# Network - Subnet Mapping
 locals {
   subnet_map = merge([
     for vnet_key, subnets in var.subnet_address_space : {
@@ -12,6 +13,7 @@ locals {
   ]...)
 }
 
+# Network - Subnet
 resource "azurerm_subnet" "subnet" {
   for_each = local.subnet_map
 

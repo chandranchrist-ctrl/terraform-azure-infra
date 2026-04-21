@@ -1,3 +1,7 @@
+/* Application Rules (FQDN-based filtering - HTTP/HTTPS only);
+action = "Allow" is typically used for domain access;
+"Deny" is not commonly used here → blocking is usually handled via Network Rules or default deny */
+
 locals {
   application_rule_collections = [
     {
@@ -8,7 +12,7 @@ locals {
       rules = [
         {
           name             = "allow-azure-services"
-          enabled          = true
+          enabled          = true /* Only creates rules if enabled = true */
           source_addresses = var.all_vm_cidrs
           destination_fqdns = [
             "*.microsoft.com",

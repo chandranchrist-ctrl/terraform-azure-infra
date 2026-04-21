@@ -1,3 +1,4 @@
+# Core
 variable "storage_account_name" {
   type = string
 }
@@ -9,6 +10,11 @@ variable "location" {
   type = string
 }
 
+variable "tags" {
+  type = map(string)
+}
+
+# Storage - Configuration
 variable "account_kind" {
   type = string
 }
@@ -25,6 +31,7 @@ variable "public_network_access" {
   type = bool
 }
 
+# Storage - Data Protection
 variable "blob_versioning_enabled" {
   type = bool
 }
@@ -37,6 +44,7 @@ variable "blob_delete_retention_days" {
   type = number
 }
 
+# Storage - Network
 variable "allowed_subnet_ids" {
   type = list(string)
 }
@@ -45,11 +53,8 @@ variable "allowed_ip_rules" {
   type = list(string)
 }
 
-variable "tags" {
-  type = map(string)
-}
 
-# ✔ IMPORTANT: lifecycle optional
+# Storage - Lifecycle
 variable "lifecycle_rules" {
   type = list(object({
     name   = string
@@ -59,6 +64,7 @@ variable "lifecycle_rules" {
   default = []
 }
 
+# Storage - Containers
 variable "containers" {
   type    = list(string)
   default = []

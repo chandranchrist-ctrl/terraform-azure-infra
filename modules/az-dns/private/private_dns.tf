@@ -1,4 +1,4 @@
-# 1. CREATE PRIVATE DNS ZONES
+# Create Private DNS Zones
 resource "azurerm_private_dns_zone" "zones" {
   for_each = toset(var.zones)
 
@@ -7,7 +7,7 @@ resource "azurerm_private_dns_zone" "zones" {
 }
 
 
-# 2. PREPARE ZONE ↔ VNET COMBINATIONS
+# Zone to VNet Mapping
 locals {
   zone_vnet_links = flatten([
     for zone in var.zones : [
@@ -20,7 +20,7 @@ locals {
   ])
 }
 
-# 3. LINK DNS ZONES TO VNets
+# DNS Zone to VNet Link
 resource "azurerm_private_dns_zone_virtual_network_link" "links" {
   for_each = {
     for item in local.zone_vnet_links :
@@ -33,5 +33,10 @@ resource "azurerm_private_dns_zone_virtual_network_link" "links" {
   private_dns_zone_name = each.value.zone
   virtual_network_id    = each.value.vnet_id
 
+  /* false = no auto DNS record registration, true = enables auto registration */
+
   registration_enabled = false
+
+  /*  false = recommended for production (manual control of DNS records, avoids conflicts);
+  true = auto-registers VM DNS records (use only for simple VM-based setups) */
 }

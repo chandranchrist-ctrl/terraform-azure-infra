@@ -1,3 +1,4 @@
+# MSSQL Server
 resource "azurerm_mssql_server" "mssql" {
   name                = var.server_name
   resource_group_name = var.resource_group_name
@@ -28,9 +29,7 @@ resource "azurerm_mssql_server" "mssql" {
   }
 }
 
-# -----------------------------
 # MSSQL Database
-# -----------------------------
 resource "azurerm_mssql_database" "db" {
   name      = var.database_name
   server_id = azurerm_mssql_server.mssql.id
