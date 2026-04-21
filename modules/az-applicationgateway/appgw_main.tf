@@ -39,7 +39,7 @@ locals {
 
     # Biztalk UAT
     module.uat-hotel.basic_routing,
-    module.uat-hotel.path_based_routing,
+    # module.uat-hotel.path_based_routing,
     module.uat-hotel.multisite_routing,
     module.uat-hotel.redirect_routing,
     module.uat-hotel.ip_to_fqdn

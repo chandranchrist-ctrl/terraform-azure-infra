@@ -2,7 +2,7 @@ locals {
   multisite_app_name = "uat-hotel"
 
   multisite_routing = {
-    enabled    = true
+    enabled    = false
     skip_in_tf = false # Set true if you want to keep module in TF state but ignore it
 
     backend_pools = [
