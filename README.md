@@ -78,13 +78,13 @@ terraform-azure-infra/
 
 ---
 
-## 🧩 Module Breakdown
+## 🧩 **Module Breakdown**
 
 This section explains the role of each Terraform module in the overall Azure architecture.
 
 ---
 
-### 🌐 Network Layer
+## 🌐 Network Layer
 
 This layer forms the foundation of the architecture and controls all network connectivity, segmentation, and routing.
 
