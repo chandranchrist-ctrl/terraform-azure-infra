@@ -281,13 +281,13 @@ module "key_vault" {
   /* key-value secrets stored in Key Vault */
   secrets = {
     localadmin-credentials = jsonencode({
-      admin-username = "HBAdmin",
-      admin-password = "Qwerty123!",
+      admin-username = "Username",
+      admin-password = "Password",
     })
 
     mssql-credentials = jsonencode({
-      username = "sqladmin"
-      password = "SQLP@ssword!23!"
+      username = "Username"
+      password = "Password"
     })
   }
 
